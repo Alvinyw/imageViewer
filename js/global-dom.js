@@ -155,7 +155,9 @@ lib.getBlobFromAnyImgData = function(imgData, callback){
 			saveFormat = "image/jpeg";
 		}
 
-		lib.canvasToBlob(tCvs, null, saveFormat);    
+		lib.canvasToBlob(tCvs, function(blob){
+			callback(blob);
+		}, saveFormat);    
 
 	}else{
 		//not support

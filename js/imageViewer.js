@@ -51,10 +51,6 @@
     this._defaultFileInput.setAttribute("accept","image/bmp,image/gif,image/jpeg,image/png,image/webp");
     this._defaultFileInput.setAttribute("multiple","true");
 
-    this._defaultFileInput.addEventListener("change", function(event){
-        _this._fileInputOnChange(event.target.files);
-    });
-
     this._imgContainerW = lib.getElDimensions(this._imgContainer).clientWidth;
     this._imgContainerH = lib.getElDimensions(this._imgContainer).clientHeight;
 
@@ -64,6 +60,22 @@
     this.curIndex = -1;
     this.imgArray = [];
     this.thumbnailArray = [];
+
+    this._defaultFileInput.addEventListener("change", function(event){
+        _this._addFilesFromLocal(event.target.files);
+    });
+
+    this._imageViewer.addEventListener("dragover", function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+    });
+
+    this._imageViewer.addEventListener("drop", function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _this._addFilesFromLocal(event.dataTransfer.files);
+    });
+
 }
 
 ImageViewer.prototype.adaptiveLayout = function () {
@@ -112,11 +124,11 @@ ImageViewer.prototype.captureImageWithBlob = function (url) {
     return true;
 }
 
-ImageViewer.prototype._fileInputOnChange = function (files) {
+ImageViewer.prototype._addFilesFromLocal = function (files) {
     var _this = this;
     if(files instanceof Array || files instanceof FileList){
         for(var i = 0; i < files.length; i++){
-            _this._fileInputOnChange(files[i]);
+            _this._addFilesFromLocal(files[i]);
         }
     }else{
         var reader = new FileReader();
