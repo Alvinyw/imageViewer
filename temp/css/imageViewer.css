@@ -1,0 +1,65 @@
+html{height:100%;}
+body{height:100%;}
+
+#imageViewer { height: 75%; }
+
+.kPainterBox, .kPainterBox *{box-sizing: border-box;}
+.kPainterBox{width:100%;height:100%;border-bottom:none;position:relative;overflow:hidden;padding:2%;}
+.kPainterBox > .kPainterImgsDiv{width:100%;height:100%;}
+.kPainterBox > .kPainterImgsDiv > canvas, .kPainterBox > .kPainterImgsDiv > img{position:absolute;margin:auto;/*left:0;top:0;right:0;bottom:0;transform-origin:left top;*/pointer-events:none;}
+/*.kPainterBox > .center{margin:auto;left:0;right:0;top:0;bottom:0;}*/
+.kPainterBox > .kPainterCroper{position:absolute;margin:auto;border-style:solid;border-color:rgba(0,0,0,0.3);/*border-right-width:100vw;border-bottom-width:100vh;*/box-sizing:content-box;}
+.kPainterBox > .kPainterCroper > .kPainterCells{width:100%;height:100%;line-height:0;position:relative;}
+.kPainterBox > .kPainterCroper > .kPainterCells > div{display:inline-block;width:33.33%;height:33.33%;border-style:solid;border-color:rgba(255,255,255,0.5);position:absolute;}
+.kPainterBox > .kPainterCroper > .kPainterCells > div:nth-child(1){border-width:1px 0 0 1px;left:0;top:0;}
+.kPainterBox > .kPainterCroper > .kPainterCells > div:nth-child(2){border-width:1px 1px 0 1px;left:0;top:0;right:0;margin:0 auto;}
+.kPainterBox > .kPainterCroper > .kPainterCells > div:nth-child(3){border-width:1px 1px 0 0;right:0;top:0;}
+.kPainterBox > .kPainterCroper > .kPainterCells > div:nth-child(4){border-width:1px 0 1px 1px;left:0;top:0;bottom:0;margin:auto 0;}
+.kPainterBox > .kPainterCroper > .kPainterCells > div:nth-child(5){border-width:1px 1px 1px 1px;left:0;top:0;right:0;bottom:0;margin:auto;}
+.kPainterBox > .kPainterCroper > .kPainterCells > div:nth-child(6){border-width:1px 1px 1px 0;right:0;top:0;bottom:0;margin:auto 0;}
+.kPainterBox > .kPainterCroper > .kPainterCells > div:nth-child(7){border-width:0 0 1px 1px;left:0;bottom:0;}
+.kPainterBox > .kPainterCroper > .kPainterCells > div:nth-child(8){border-width:0 1px 1px 1px;left:0;bottom:0;right:0;margin:0 auto;}
+.kPainterBox > .kPainterCroper > .kPainterCells > div:nth-child(9){border-width:0 1px 1px 0;right:0;bottom:0;}
+/*.kPainterBox > .kPainterCroper > .kPainterCells{width:100%;height:100%;overflow:hidden;}
+.kPainterBox > .kPainterCroper > .kPainterCells > table{width:100%;height:100%;}
+.kPainterBox > .kPainterCroper > .kPainterCells td{border:1px solid white;}*/
+.kPainterBox > .kPainterCroper > .kPainterBigMover{position:absolute;width:100%;height:100%;left:0;top:0;z-index:1;cursor:move;}
+.kPainterBox > .kPainterCroper > .kPainterEdges > div{position:absolute;border-color:white;border-style:solid;border:0;}
+.kPainterBox > .kPainterCroper > .kPainterEdges > div:nth-child(1){width:30px;height:100%;left:-15px;top:0;z-index:1;cursor:w-resize;}
+.kPainterBox > .kPainterCroper > .kPainterEdges > div:nth-child(2){width:100%;height:30px;left:0;top:-15px;z-index:1;cursor:n-resize;}
+.kPainterBox > .kPainterCroper > .kPainterEdges > div:nth-child(3){width:30px;height:100%;right:-15px;top:0;z-index:1;cursor:e-resize;}
+.kPainterBox > .kPainterCroper > .kPainterEdges > div:nth-child(4){width:100%;height:30px;left:0;bottom:-15px;z-index:1;cursor:s-resize;}
+/*.kPainterBox > .kPainterCroper > .kPainterEdges > div > span{width:16px;height:16px;display:inline-block;position:fixed;}*/
+.kPainterBox > .kPainterCroper > .kPainterCorners > div{position:absolute;width:16px;height:16px;border-color:white;border-style:solid;}
+.kPainterBox > .kPainterCroper > .kPainterCorners > div:nth-child(1){left:0;top:0;border-width:2px 0 0 2px;z-index:1;cursor:nw-resize;}
+.kPainterBox > .kPainterCroper > .kPainterCorners > div:nth-child(2){right:0;top:0;border-width:2px 2px 0 0;z-index:1;cursor:ne-resize;}
+.kPainterBox > .kPainterCroper > .kPainterCorners > div:nth-child(3){right:0;bottom:0;border-width:0 2px 2px 0;z-index:1;cursor:se-resize;}
+.kPainterBox > .kPainterCroper > .kPainterCorners > div:nth-child(4){left:0;bottom:0;border-width:0 0 2px 2px;z-index:1;cursor:sw-resize;}
+.kPainterBox > .kPainterCroper > .kPainterCorners > div > i{width:32px;height:32px;position:absolute;display:inline-block;}
+.kPainterBox > .kPainterCroper > .kPainterCorners > div:nth-child(1) > i{left:-16px;top:-16px;}
+.kPainterBox > .kPainterCroper > .kPainterCorners > div:nth-child(2) > i{right:-16px;top:-16px;}
+.kPainterBox > .kPainterCroper > .kPainterCorners > div:nth-child(3) > i{right:-16px;bottom:-16px;}
+.kPainterBox > .kPainterCroper > .kPainterCorners > div:nth-child(4) > i{left:-16px;bottom:-16px;}
+.kPainterBox > .kPainterCroper > .kPainterMover{display:inline-block;position:absolute;border:solid 12px rgba(0,0,0,0.15);border-radius:12px;left: 13px;top:13px;z-index:1;cursor:move;}
+.kPainterBox > .kPainterCroper > .kPainterMover > div{display:inline-block;position:absolute;border:solid 15px transparent;border-radius:15px;left:-15px;top:-15px;}
+.kPainterBox > .kPainterCroper > .kPainterMover > svg{display:inline-block;position:absolute;left:-10px;top:-10px;}
+/*.kPainterBox > .kPainterCroper > .kPainterCorners > div > i > span{width:16px;height:16px;display:inline-block;position:fixed;}*/
+.kPainterBox > .kPainterPerspect{position:absolute;width:100%;height:100%;left:0;top:0;}
+.kPainterBox > .kPainterPerspect > .kPainterPerspectCvs{position:absolute;margin:auto;left:-100000px;top:-100000px;right:-100000px;bottom:-100000px;}
+.kPainterBox > .kPainterPerspect > .kPainterPerspectCorner{position:absolute;margin:auto;width:20px;height:20px;border-radius:10px;border:2px solid #0f0;color:#fff;background:rgba(0,0,0,0.3);text-align:center;line-height:16px;font-size:12px;font-family:Arial,sans-serif;z-index:1;cursor:move;}
+.kPainterBox > .kPainterGesturePanel{position:absolute;left:0;top:0;width:100%;height:100%;}
+
+#thumbnailContainer { padding: 2% 0 2% 2%; width: 100%; height: 25%; white-space: nowrap; overflow: scroll; }
+#thumbnailContainer:after { content: ''; display: inline-block; clear: both; }
+#thumbnailContainer .div-thumbnailBox { margin: 0 2% 0 0; width: 33.33%; height: 100%; display: inline-block; border: 1px solid #ccc; }
+#thumbnailContainer .div-thumbnailBox canvas { width:100%; height: 100%; }
+#thumbnailContainer .div-thumbnailBox .div-trashFog { display: none; }
+
+.grayFog{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.3);z-index:1;}
+.spinner{width:20vmin;height:20vmin;margin:auto;position:absolute;top:0;bottom:0;left:0;right:0;}
+.double-bounce1, .double-bounce2{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:50%;background-color:rgba(103,207,34,0.6);animation: bounce 2.0s infinite ease-in-out;}
+.double-bounce2{animation-delay: -1.0s;}
+@keyframes bounce{
+	0%, 100%{transform: scale(0.0);}
+	50%{transform: scale(1.0);}
+}
