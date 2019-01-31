@@ -124,6 +124,85 @@ ImageViewer.prototype.captureImageWithBlob = function (url) {
     return true;
 }
 
+ImageViewer.prototype.showImage = function (index) {
+    //update image container
+    var _imgArr = this.imgArray;
+    if(index<0 || index>this.imgArray.length-1){ return false; }
+
+    for(var i = 0;i<_imgArr.length;i++){
+        if(i==index){
+            _imgArr[i].style.display = "block";
+        }
+        else{
+            _imgArr[i].style.display = "none";
+        }
+    }
+   
+    //update thumbnail
+    var _thumArr = this.thumbnailArray;
+
+    for(var i = 0;i<_thumArr.length;i++){
+        if(i==index){
+            lib.addClass(_thumArr[i],'on');
+        }
+        else{
+           lib.removeClass(_thumArr[i],'on');
+        }
+    }
+
+    this.curIndex = index;
+    this._updateNumUI();
+    return true;
+}
+
+ImageViewer.prototype.getCurentIndex = function () {
+    return this.curIndex;
+}
+
+ImageViewer.prototype.getCount = function () {
+    return this.imgArray.length;
+}
+
+ImageViewer.prototype.getImage = function (index,isOri) {
+    var _curIndex = index || this.curIndex;
+    if(isOri){
+        return this.imgArray[_curIndex];
+    }else{
+        return this.imgArray[_curIndex].cloneNode(true);
+    }
+    
+}
+
+ImageViewer.prototype.deleteImage = function (index) {
+    var _curIndex = index || this.curIndex;
+    if(index < 0 || index >= this.imgArray.length){ return false; }
+    
+    //update image container
+    this._imgContainer.removeChild(this.imgArray[index]);
+    this.imgArray.splice(index, 1);
+
+    //update thumbnail container
+    this._thumbnailContainer.removeChild(this.thumbnailArray[index]);
+    this.thumbnailArray.splice(index, 1);
+
+    if(index < this.curIndex){
+        this.curIndex--;
+        this._updateNumUI();
+    }else if(index > this.curIndex){
+        this._updateNumUI();
+    }else{
+        this.curIndex--;
+        this.showImage(this.curIndex<0?0:this.curIndex);
+    }
+
+    return true;
+}
+
+ImageViewer.prototype.showFileChooseWindow = function(){
+    this._defaultFileInput.click();
+    return true;
+};
+
 ImageViewer.prototype._addFilesFromLocal = function (files) {
     var _this = this;
     if(files instanceof Array || files instanceof FileList){
@@ -174,83 +253,6 @@ ImageViewer.prototype._addImgToThumbnail = function (img) {
     this.thumbnailArray.push(newDiv);
     this._thumbnailContainer.appendChild(newDiv);
 }
-
-ImageViewer.prototype.showImage = function (index) {
-    //update image container
-    var _imgArr = this.imgArray;
-
-    for(var i = 0;i<_imgArr.length;i++){
-        if(i==index){
-            _imgArr[i].style.display = "block";
-        }
-        else{
-            _imgArr[i].style.display = "none";
-        }
-    }
-   
-    //update thumbnail
-    var _thumArr = this.thumbnailArray;
-
-    for(var i = 0;i<_thumArr.length;i++){
-        if(i==index){
-            lib.addClass(_thumArr[i],'on');
-        }
-        else{
-           lib.removeClass(_thumArr[i],'on');
-        }
-    }
-
-    this.curIndex = index;
-    this._updateNumUI();
-    return true;
-}
-
-ImageViewer.prototype.getCurentIndex = function () {
-    return this.curIndex;
-}
-
-ImageViewer.prototype.getCount = function () {
-    return this.imgArray.length;
-}
-
-ImageViewer.prototype.getImage = function (index,isOri) {
-    var _curIndex = index || this.curIndex;
-    if(isOri){
-        return this.imgArray[_curIndex];
-    }else{
-        return this.imgArray[_curIndex].cloneNode(true);
-    }
-    
-}
-
-ImageViewer.prototype.deleteImage = function (index) {
-    var _curIndex = index || this.curIndex;
-    if(index < 0 || index >= this.imgArray.length){ return false; }
-    //update image container
-    this.imgArray[index].remove();
-    this.imgArray.splice(index, 1);
-
-    //update thumbnail
-    this.thumbnailArray[index].remove();
-    this.thumbnailArray.splice(index, 1);
-
-    if(index < this.curIndex){
-        this.curIndex--;
-        this._updateNumUI();
-    }else if(index > this.curIndex){
-        this._updateNumUI();
-    }else{
-        this.curIndex--;
-        this.showImage(this.curIndex);
-    }
-
-    return true;
-}
-
-ImageViewer.prototype.showFileChooseWindow = function(){
-    this._defaultFileInput.click();
-    return true;
-};
 
 ImageViewer.prototype.onNumChange = null;
 ImageViewer.prototype._updateNumUI = function(){
