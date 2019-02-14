@@ -43,7 +43,8 @@
     this._imageViewer = document.getElementById(ImageViewerID);
     this._imageViewer.innerHTML = containerDiv;
     this._Canvas = this._imageViewer.querySelector('canvas.kPainterCanvas');
-    this._imgContainer = this._imageViewer.querySelector('div.kPainterImgsDiv');
+    this._imgContainer = this._imageViewer.querySelector('div.imageContainer');
+    this._imgsDiv = this._imageViewer.querySelector('div.kPainterImgsDiv');
     this._thumbnailContainer = this._imageViewer.querySelector('div.thumbnailContainer');
 
     this._defaultFileInput = document.createElement("input");
@@ -53,6 +54,9 @@
 
     this._imgContainerW = lib.getElDimensions(this._imgContainer).clientWidth;
     this._imgContainerH = lib.getElDimensions(this._imgContainer).clientHeight;
+
+    this._imgsDivW = lib.getElDimensions(this._imgsDiv).clientWidth;
+    this._imgsDivH = lib.getElDimensions(this._imgsDiv).clientHeight;
 
     this._thumbnailContainerW = lib.getElDimensions(this._thumbnailContainer).clientWidth;
     this._thumbnailContainerH = lib.getElDimensions(this._thumbnailContainer).clientHeight;
@@ -76,12 +80,74 @@
         _this._addFilesFromLocal(event.dataTransfer.files);
     });
 
+    this._startPos = {};
+    //https://developer.mozilla.org/zh-CN/docs/Web/Events
+    this._imgContainer.addEventListener("touchstart", ontouchstart, false);
+    this._imgContainer.addEventListener("touchmove", ontouchmove, false);
+    this._imgContainer.addEventListener("touchend", ontouchend, false);
+
+    function ontouchstart(event){
+        //event.preventDefault();
+        var touches = event.changedTouches;
+        //Multi-contact is prohibited
+        if(touches.length!=1){return false;}
+
+        _this._startPos = {
+            startX: touches[0].pageX,
+            startY: touches[0].pageY
+        }
+    }
+
+    function ontouchmove(event){
+        event.preventDefault();
+        if(_this.getCount()<1){return false;}
+
+        var touches = event.changedTouches;
+        var _curOffsetX = touches[0].pageX - _this._startPos.startX,
+            _curOffsetY = touches[0].pageY - _this._startPos.startY;
+
+        var _imgArray =  _this.imgArray,
+            _curIndex = _this.curIndex,
+            _pIndex = (_curIndex - 1)<0?(_imgArray.length-1):(_curIndex - 1),
+            _nIndex = (_curIndex + 1)>(_imgArray.length-1)?0:(_curIndex + 1);
+
+        _imgArray[_curIndex].style.left = (_this._imgsDivW - _imgArray[_curIndex].width)/2 + _curOffsetX + "px";
+        _imgArray[_pIndex].style.right = _this._imgContainerW - _curOffsetX + "px";
+        _imgArray[_nIndex].style.left = _this._imgContainerW + _curOffsetX + "px";
+
+        //console.log('pageX: '+touches[0].pageX+" pageY: "+touches[0].pageY);   
+    }
+
+    function ontouchend(event){
+        event.preventDefault();
+        if(_this.getCount()<1){return false;}
+
+        var touches = event.changedTouches;
+        var _curOffsetX = touches[0].pageX - _this._startPos.startX,
+            _curOffsetY = touches[0].pageY - _this._startPos.startY;
+
+        var _imgArray =  _this.imgArray,
+            _curIndex = _this.curIndex,
+            _pIndex = (_curIndex - 1)<0?(_imgArray.length-1):(_curIndex - 1),
+            _nIndex = (_curIndex + 1)>(_imgArray.length-1)?0:(_curIndex + 1);
+
+        if(_curOffsetX>_this._imgsDivW/3){
+            _this.changePage('p');
+        }else if(_curOffsetX<-_this._imgsDivW/3){
+            _this.changePage('n');
+        }else{
+            _imgArray[_curIndex].style.left = (_this._imgsDivW - _imgArray[_curIndex].width)/2 + 'px';
+            _imgArray[_pIndex].style.right = _this._imgContainerW + 'px';
+            _imgArray[_nIndex].style.left = _this._imgContainerW + 'px';
+        }
+    }
+
 }
 
 ImageViewer.prototype.adaptiveLayout = function () {
     var _this = this;
-    this._imgContainerW = lib.getElDimensions(this._imgContainer).clientWidth;
-    this._imgContainerH = lib.getElDimensions(this._imgContainer).clientHeight;
+    this._imgsDivW = lib.getElDimensions(this._imgsDiv).clientWidth;
+    this._imgsDivH = lib.getElDimensions(this._imgsDiv).clientHeight;
 
     this._thumbnailContainerW = lib.getElDimensions(this._thumbnailContainer).clientWidth;
     this._thumbnailContainerH = lib.getElDimensions(this._thumbnailContainer).clientHeight;
@@ -110,7 +176,13 @@ ImageViewer.prototype.captureImage = function (url) {
     img.onerror = function(){
         console.log("Failed to create image node.");
     }
-    img.src = url;
+
+    if(url instanceof Blob){
+        img.src = URL.createObjectURL(url);
+        img.oriBlob = url;
+    }else{
+        img.src = url;
+    }    
 
     return true;
 }
@@ -118,26 +190,15 @@ ImageViewer.prototype.captureImage = function (url) {
 ImageViewer.prototype.captureImageWithBlob = function (url) {
     var _this = this;
     lib.getBlobFromAnyImgData(url, function(blob){
-        _this.captureImage(URL.createObjectURL(blob));
+        _this.captureImage(blob);
     });
 
     return true;
 }
 
 ImageViewer.prototype.showImage = function (index) {
-    //update image container
-    var _imgArr = this.imgArray;
     if(index<0 || index>this.imgArray.length-1){ return false; }
-
-    for(var i = 0;i<_imgArr.length;i++){
-        if(i==index){
-            _imgArr[i].style.display = "block";
-        }
-        else{
-            _imgArr[i].style.display = "none";
-        }
-    }
-   
+      
     //update thumbnail
     var _thumArr = this.thumbnailArray;
 
@@ -151,9 +212,38 @@ ImageViewer.prototype.showImage = function (index) {
     }
 
     this.curIndex = index;
+
+    //update image container
+    this._updateImagePosition();
+
     this._updateNumUI();
     return true;
 }
+
+ImageViewer.prototype.changePage = function(cmd){
+    var _index;
+    switch(cmd){
+        case "f": _index = 0; break;
+        case "p": _index = this.curIndex - 1; break;
+        case "n": _index = this.curIndex + 1; break;
+        case "l": _index = this.imgArray.length - 1; break;
+        default: 
+            if(arguments.length < 1 || isNaN(cmd)){
+                return false;
+            }else{
+                _index = Math.round(cmd);
+            }
+    }
+    /*eslint-enable indent*/
+    if(_index<0){
+        _index = this.imgArray.length -1;
+    }else if(_index>this.imgArray.length-1){
+        _index = 0;
+    }
+
+    this.showImage(_index);
+    return true;
+};
 
 ImageViewer.prototype.getCurentIndex = function () {
     return this.curIndex;
@@ -178,7 +268,7 @@ ImageViewer.prototype.deleteImage = function (index) {
     if(index < 0 || index >= this.imgArray.length){ return false; }
     
     //update image container
-    this._imgContainer.removeChild(this.imgArray[index]);
+    this._imgsDiv.removeChild(this.imgArray[index]);
     this.imgArray.splice(index, 1);
 
     //update thumbnail container
@@ -198,8 +288,83 @@ ImageViewer.prototype.deleteImage = function (index) {
     return true;
 }
 
+ImageViewer.prototype.download = function(filename, index){
+    if(arguments.length < 2){
+        index = this.curIndex;
+    }
+    if(isNaN(index)){ return false; }
+    index = Math.round(index);
+    if(index < 0 || index >= this.imgArray.length){ return false; }
+    var a = document.createElement('a');
+    a.target='_blank';
+    var img = this.imgArray[index];
+    var blob = img.oriBlob || img.src;
+    if(!filename){
+        var suffix = "";
+        if(blob.type){
+            suffix = blob.type.substring(blob.type.indexOf('/')+1);
+        }else if(-1 != suffix.indexOf(".png")){
+            suffix = "png";
+        }else if(-1 != suffix.indexOf(".gif")){
+            suffix = "gif";
+        }else if(-1 != suffix.indexOf(".jpg") || -1 != suffix.indexOf(".jpeg")){
+            suffix = "jpg";
+        }else{
+            suffix = "png";
+        }
+        filename = (new Date()).getTime() + '.' + suffix;
+    }
+    a.download = filename;
+    var objUrl = img.oriBlob ? URL.createObjectURL(blob) : img.src;
+    //var objUrl = img.src;
+    a.href = objUrl;
+    var ev = new MouseEvent('click',{
+        "view": window,
+        "bubbles": true,
+        "cancelable": false
+    });
+    a.dispatchEvent(ev);
+    //a.click();
+    setTimeout(function(){
+        img.oriBlob ? URL.revokeObjectURL(objUrl) : null;
+    }, 10000);
+    return filename;
+};
+
 ImageViewer.prototype.showFileChooseWindow = function(){
     this._defaultFileInput.click();
+    return true;
+};
+
+ImageViewer.prototype._updateImagePosition = function(){
+    var _imgArray = this.imgArray,
+        _curIndex = this.curIndex,
+        _pIndex = (_curIndex - 1)<0?(_imgArray.length-1):(_curIndex - 1),
+        _nIndex = (_curIndex + 1)>(_imgArray.length-1)?0:(_curIndex + 1);
+
+    for(var i=0;i<_imgArray.length;i++){
+        if(i!=_curIndex && i!=_pIndex && i!= _nIndex){
+            _imgArray[i].style.display = 'none';
+        }else{
+            _imgArray[i].style.display = 'block';
+        }
+        _imgArray[i].style.right = '';
+        _imgArray[i].style.left = '';
+    } 
+
+    _imgArray[_curIndex].style.left = (this._imgsDivW - _imgArray[_curIndex].width)/2 + 'px';
+    //_imgArray[_curIndex].style.right = '0';
+
+    if(_pIndex!=_curIndex){
+        _imgArray[_pIndex].style.left = '';
+        _imgArray[_pIndex].style.right = this._imgContainerW + 'px';
+    }
+
+    if(_nIndex!=_curIndex && _nIndex!=_pIndex){
+        _imgArray[_nIndex].style.right = '';
+        _imgArray[_nIndex].style.left = this._imgContainerW + 'px';
+    }
+
     return true;
 };
 
@@ -219,21 +384,21 @@ ImageViewer.prototype._addFilesFromLocal = function (files) {
 }
 
 ImageViewer.prototype._fitImage = function (img) {
-    var containerAspectRatio = this._imgContainerW / this._imgContainerH;
+    var containerAspectRatio = this._imgsDivW / this._imgsDivH;
     var imgAspectRatio = img.naturalWidth / img.naturalHeight;
 
     if(imgAspectRatio>containerAspectRatio){
-        img.width = this._imgContainerW;
+        img.width = this._imgsDivW;
         img.height = img.width/imgAspectRatio;
     }else {
-        img.height = this._imgContainerH;
+        img.height = this._imgsDivH;
         img.width = img.height*imgAspectRatio;
     }
 }
 
 ImageViewer.prototype._addImgToContainer = function (img) {
     this._fitImage(img);
-    this._imgContainer.appendChild(img);
+    this._imgsDiv.appendChild(img);
 }
 
 ImageViewer.prototype._addImgToThumbnail = function (img) {
@@ -258,3 +423,4 @@ ImageViewer.prototype.onNumChange = null;
 ImageViewer.prototype._updateNumUI = function(){
     lib.doCallbackNoBreak(this.onNumChange,[this.curIndex, this.imgArray.length]);
 };
+

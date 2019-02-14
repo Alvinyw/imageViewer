@@ -7,5 +7,8 @@ imageViewer.onNumChange = function(curIndex,imgCount){
 }
 
 window.onresize = function(){
-    imageViewer.adaptiveLayout();
+    var imgCount = imageViewer.getCount();
+    if(imgCount>1){
+        imageViewer.adaptiveLayout();
+    }
 };
