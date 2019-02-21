@@ -66,45 +66,82 @@
     this.thumbnailArray = [];
 
     this._defaultFileInput.addEventListener("change", function(event){
-        _this._addFilesFromLocal(event.target.files);
+        var ev = event || window.event;
+        _this._addFilesFromLocal(ev.target.files);
     });
 
     this._imageViewer.addEventListener("dragover", function(event) {
-        event.stopPropagation();
-        event.preventDefault();
+        var ev = event || window.event;
+		lib.stopDefault(ev);
+        // event.stopPropagation();
+        // event.preventDefault();
     });
 
-    this._imageViewer.addEventListener("drop", function(event) {
-        event.stopPropagation();
-        event.preventDefault();
-        _this._addFilesFromLocal(event.dataTransfer.files);
+    // this._imageViewer.addEventListener("drop", function(event) {
+    //     var ev = event || window.event;
+	// 	lib.stopDefault(ev);
+    //     // event.stopPropagation();
+    //     // event.preventDefault();
+    //     _this._addFilesFromLocal(ev.dataTransfer.files);
+    // });
+
+    lib.addEvent(this._imageViewer,"drop", function(event) {
+        var ev = event || window.event;
+		lib.stopDefault(ev);
+        // event.stopPropagation();
+        // event.preventDefault();
+        _this._addFilesFromLocal(ev.dataTransfer.files);
     });
 
     this._startPos = {};
-    //https://developer.mozilla.org/zh-CN/docs/Web/Events
-    this._imgContainer.addEventListener("touchstart", ontouchstart, false);
-    this._imgContainer.addEventListener("touchmove", ontouchmove, false);
-    this._imgContainer.addEventListener("touchend", ontouchend, false);
+    lib.addEvent(this._imgContainer,"touchstart", fuc_touchstart);
+    lib.addEvent(this._imgContainer,"touchmove", fuc_touchmove);
+    lib.addEvent(this._imgContainer,"touchend", fuc_touchend);
 
-    function ontouchstart(event){
-        //event.preventDefault();
-        var touches = event.changedTouches;
-        //Multi-contact is prohibited
-        if(touches.length!=1){return false;}
+    lib.addEvent(this._imgContainer,"mousedown", fuc_touchstart);
+    lib.addEvent(this._imgContainer,"mouseup", fuc_touchend);
+    
+    function fuc_touchstart(event){
+        var ev = event || window.event;
+		lib.stopDefault(ev);
 
-        _this._startPos = {
-            startX: touches[0].pageX,
-            startY: touches[0].pageY
+        lib.addEvent(_this._imgContainer,"mousemove", fuc_touchmove);
+        lib.addEvent(_this._imgContainer,"mouseleave", fuc_touchend);
+
+        var touches = ev.changedTouches;
+
+        if(touches){
+            //Multi-contact is prohibited
+            if(touches.length!=1){return false;}
+
+            _this._startPos = {
+                startX: touches[0].pageX,
+                startY: touches[0].pageY
+            }
+        }else{
+            _this._startPos = {
+                startX: ev.clientX,
+                startY: ev.clientY
+            }
         }
-    }
 
-    function ontouchmove(event){
-        event.preventDefault();
-        if(_this.getCount()<1){return false;}
+    } 
 
-        var touches = event.changedTouches;
-        var _curOffsetX = touches[0].pageX - _this._startPos.startX,
-            _curOffsetY = touches[0].pageY - _this._startPos.startY;
+    function fuc_touchmove(event){
+        var ev = event || window.event;
+		lib.stopDefault(ev);
+
+        if(_this.getCount()<2){return false;}
+
+        var touches = ev.changedTouches;
+
+        if(touches){
+            var _curOffsetX = touches[0].pageX - _this._startPos.startX,
+                _curOffsetY = touches[0].pageY - _this._startPos.startY;
+        }else{
+            var _curOffsetX = ev.clientX - _this._startPos.startX,
+                _curOffsetY = ev.clientY - _this._startPos.startY;
+        }
 
         var _imgArray =  _this.imgArray,
             _curIndex = _this.curIndex,
@@ -118,13 +155,26 @@
         //console.log('pageX: '+touches[0].pageX+" pageY: "+touches[0].pageY);   
     }
 
-    function ontouchend(event){
-        event.preventDefault();
+    function fuc_touchend(event){
+        var ev = event || window.event;
+		lib.stopDefault(ev);
+        
         if(_this.getCount()<1){return false;}
 
-        var touches = event.changedTouches;
-        var _curOffsetX = touches[0].pageX - _this._startPos.startX,
-            _curOffsetY = touches[0].pageY - _this._startPos.startY;
+        lib.removeEvent(_this._imgContainer,"mousemove", fuc_touchmove);
+        lib.removeEvent(_this._imgContainer,"mouseleave", fuc_touchend);
+
+        if(_this.getCount()<2){return false;}
+
+        var touches = ev.changedTouches;
+
+        if(touches){
+            var _curOffsetX = touches[0].pageX - _this._startPos.startX,
+                _curOffsetY = touches[0].pageY - _this._startPos.startY;
+        }else{
+            var _curOffsetX = ev.clientX - _this._startPos.startX,
+                _curOffsetY = ev.clientY - _this._startPos.startY;
+        }
 
         var _imgArray =  _this.imgArray,
             _curIndex = _this.curIndex,
@@ -142,6 +192,8 @@
         }
     }
 
+    //https://developer.mozilla.org/zh-CN/docs/Web/Events
+    
 }
 
 ImageViewer.prototype.adaptiveLayout = function () {
@@ -174,7 +226,7 @@ ImageViewer.prototype.captureImage = function (url) {
         _this.showImage(_this.curIndex);        
     }
     img.onerror = function(){
-        console.log("Failed to create image node.");
+        console.log("Failed to create image node."); 
     }
 
     if(url instanceof Blob){

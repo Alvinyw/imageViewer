@@ -183,3 +183,18 @@ lib.getBlobFromAnyImgData = function(imgData, callback){
 // 	parent.removeChild(parent.children[_NodeIndex]); 
 // };
 
+lib.addEvent = function(obj,type,handle){
+	obj.addEventListener ? obj.addEventListener(type,handle,false) : obj.attachEvent("on"+type,handle);
+};
+
+lib.removeEvent = function(obj,type,handle){
+	obj.removeEventListener ? obj.removeEventListener(type,handle,false) : obj.detachEvent("on"+type,handle); 
+};
+
+lib.stopDefault = function(e){
+	if ( e && e.preventDefault ){ 
+		e.preventDefault();
+	} else { 
+		window.event.returnValue = false;
+	}
+};
