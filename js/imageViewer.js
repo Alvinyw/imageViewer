@@ -365,15 +365,19 @@ ImageViewer.prototype.download = function(filename, index){
     }
     a.download = filename;
     var objUrl = img.oriBlob ? URL.createObjectURL(blob) : img.src;
-    //var objUrl = img.src;
+    
     a.href = objUrl;
-    var ev = new MouseEvent('click',{
-        "view": window,
-        "bubbles": true,
-        "cancelable": false
-    });
-    a.dispatchEvent(ev);
-    //a.click();
+    // var ev = new MouseEvent('click',{
+    //     "view": window,
+    //     "bubbles": true,
+    //     "cancelable": false
+    // });
+    // a.dispatchEvent(ev);
+
+    var evnObj = document.createEvent('MouseEvents');
+    evnObj.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,true,false,0,null);
+    a.dispatchEvent(evnObj);
+
     setTimeout(function(){
         img.oriBlob ? URL.revokeObjectURL(objUrl) : null;
     }, 10000);

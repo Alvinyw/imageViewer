@@ -221,10 +221,6 @@ lib._querySelectorAll = function(element, selector){
 	}
 };
 
-lib.IEVersion = function(){
-
-}
-
 //indexOf() do not compatible with IE6-8
 if(!Array.prototype.indexOf){  
 	Array.prototype.indexOf = function(val){  
