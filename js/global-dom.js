@@ -11,7 +11,8 @@ lib.getElDimensions = function (el) {
 	
 	elDimensions = 
 	{
-		clientTop: el.clientTop, clientLeft: el.clientLeft,
+		clientTop: el.clientTop, 
+		clientLeft: el.clientLeft,
 		clientWidth: el.clientWidth ? el.clientWidth : (parseInt(el.style.width) ? parseInt(el.style.width) : 0),
 		clientHeight: el.clientHeight ? el.clientHeight : (parseInt(el.style.height) ? parseInt(el.style.height) : 0)
 	};
@@ -198,3 +199,67 @@ lib.stopDefault = function(e){
 		window.event.returnValue = false;
 	}
 };
+
+lib._querySelectorAll = function(element, selector){
+	var idAllocator = 10000;
+	if (element.querySelectorAll){
+		return element.querySelectorAll(selector);
+	}else {
+		var needsID = element.id === "";
+        if (needsID) {
+            ++idAllocator;
+            element.id = "__qsa" + idAllocator;
+        }
+        try {
+            return document.querySelectorAll("#" + element.id + " " + selector);
+        }
+        finally {
+            if (needsID) {
+                element.id = "";
+            }
+        }
+	}
+};
+
+lib.IEVersion = function(){
+
+}
+
+//indexOf() do not compatible with IE6-8
+if(!Array.prototype.indexOf){  
+	Array.prototype.indexOf = function(val){  
+		var value = this;  
+		for(var i =0; i < value.length; i++){  
+		   if(value[i] == val) return i;  
+		}  
+	   return -1;  
+	};  
+ }
+
+ // querySelector & querySelectorAll do not compatible with IE6-7
+ if (!document.querySelectorAll) {
+    document.querySelectorAll = function (selectors) {
+        var style = document.createElement('style'), elements = [], element;
+        document.documentElement.firstChild.appendChild(style);
+        document._qsa = [];
+
+        style.styleSheet.cssText = selectors + '{x-qsa:expression(document._qsa && document._qsa.push(this))}';
+        window.scrollBy(0, 0);
+        style.parentNode.removeChild(style);
+
+        while (document._qsa.length) {
+            element = document._qsa.shift();
+            element.style.removeAttribute('x-qsa');
+            elements.push(element);
+        }
+        document._qsa = null;
+        return elements;
+    };
+}
+
+if (!document.querySelector) {
+    document.querySelector = function (selectors) {
+        var elements = document.querySelectorAll(selectors);
+        return (elements.length) ? elements[0] : null;
+    };
+}

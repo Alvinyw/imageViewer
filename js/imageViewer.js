@@ -42,10 +42,10 @@
     ].join('');
     this._imageViewer = document.getElementById(ImageViewerID);
     this._imageViewer.innerHTML = containerDiv;
-    this._Canvas = this._imageViewer.querySelector('canvas.kPainterCanvas');
-    this._imgContainer = this._imageViewer.querySelector('div.imageContainer');
-    this._imgsDiv = this._imageViewer.querySelector('div.kPainterImgsDiv');
-    this._thumbnailContainer = this._imageViewer.querySelector('div.thumbnailContainer');
+    this._Canvas = lib._querySelectorAll(this._imageViewer,'canvas.kPainterCanvas')[0];
+    this._imgContainer = lib._querySelectorAll(this._imageViewer,'div.imageContainer')[0];
+    this._imgsDiv = lib._querySelectorAll(this._imageViewer,'div.kPainterImgsDiv')[0];
+    this._thumbnailContainer = lib._querySelectorAll(this._imageViewer,'div.thumbnailContainer')[0];
 
     this._defaultFileInput = document.createElement("input");
     this._defaultFileInput.setAttribute("type","file");
@@ -65,25 +65,17 @@
     this.imgArray = [];
     this.thumbnailArray = [];
 
-    this._defaultFileInput.addEventListener("change", function(event){
+    lib.addEvent(this._defaultFileInput,"change", function(event) {
         var ev = event || window.event;
         _this._addFilesFromLocal(ev.target.files);
     });
 
-    this._imageViewer.addEventListener("dragover", function(event) {
+    lib.addEvent(this._imageViewer,"dragover", function(event) {
         var ev = event || window.event;
 		lib.stopDefault(ev);
         // event.stopPropagation();
         // event.preventDefault();
     });
-
-    // this._imageViewer.addEventListener("drop", function(event) {
-    //     var ev = event || window.event;
-	// 	lib.stopDefault(ev);
-    //     // event.stopPropagation();
-    //     // event.preventDefault();
-    //     _this._addFilesFromLocal(ev.dataTransfer.files);
-    // });
 
     lib.addEvent(this._imageViewer,"drop", function(event) {
         var ev = event || window.event;
@@ -220,6 +212,7 @@ ImageViewer.prototype.captureImage = function (url) {
         
         _this.imgArray.push(img);
         _this._addImgToContainer(img);
+
         _this._addImgToThumbnail(img.cloneNode(true));
 
         _this.curIndex ++;
@@ -229,12 +222,16 @@ ImageViewer.prototype.captureImage = function (url) {
         console.log("Failed to create image node."); 
     }
 
-    if(url instanceof Blob){
-        img.src = URL.createObjectURL(url);
-        img.oriBlob = url;
-    }else{
+    try{
+        if(url instanceof Blob){
+            img.src = URL.createObjectURL(url);
+            img.oriBlob = url;
+        }else{
+            img.src = url;
+        }   
+    }catch(e) {
         img.src = url;
-    }    
+    }   
 
     return true;
 }
@@ -437,7 +434,7 @@ ImageViewer.prototype._addFilesFromLocal = function (files) {
 
 ImageViewer.prototype._fitImage = function (img) {
     var containerAspectRatio = this._imgsDivW / this._imgsDivH;
-    var imgAspectRatio = img.naturalWidth / img.naturalHeight;
+    var imgAspectRatio = img.oriWidth / img.oriHeight;
 
     if(imgAspectRatio>containerAspectRatio){
         img.width = this._imgsDivW;
@@ -456,19 +453,31 @@ ImageViewer.prototype._addImgToContainer = function (img) {
 ImageViewer.prototype._addImgToThumbnail = function (img) {
     var _this = this;
     var cvs = document.createElement("canvas");
-    cvs.width = this._thumbnailContainerW/3;
-    cvs.height = this._thumbnailContainerH;
-    var ctx = cvs.getContext('2d');
-    ctx.drawImage(img,0,0,cvs.width,cvs.height);
 
     var newDiv = document.createElement("div");
     newDiv.className = 'thumbnail-item on';
-    newDiv.addEventListener("click",function(){
-        _this.showImage(_this.thumbnailArray.indexOf(this));
+    lib.addEvent(newDiv,"click", function(){
+        _this.showImage(_this.thumbnailArray.indexOf(newDiv));
     });
-    newDiv.appendChild(cvs);
+    newDiv.appendChild(cvs); 
     this.thumbnailArray.push(newDiv);
     this._thumbnailContainer.appendChild(newDiv);
+
+    if (!cvs.getContext) {
+		G_vmlCanvasManager.initElement(cvs)
+    }
+
+    if(uaInfo.strVersion<9.0){
+        cvs.width = this._thumbnailContainerW*0.90/3;
+        cvs.height = this._thumbnailContainerH*0.85;
+    }else{
+        cvs.width = this._thumbnailContainerW/3;
+        cvs.height = this._thumbnailContainerH;
+    }
+    
+    var ctx = cvs.getContext('2d');
+    ctx.drawImage(img,0,0,cvs.width,cvs.height);
+
 }
 
 ImageViewer.prototype.onNumChange = null;
