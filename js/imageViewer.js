@@ -313,8 +313,11 @@ ImageViewer.prototype.getImage = function (index,isOri) {
 }
 
 ImageViewer.prototype.deleteImage = function (index) {
-    var _curIndex = index || this.curIndex;
-    if(index < 0 || index >= this.imgArray.length){ return false; }
+    if(arguments.length!=1){
+        index = this.curIndex;
+    }else if(index < 0 || index >= this.imgArray.length){ 
+        return false;
+    }
     
     //update image container
     this._imgsDiv.removeChild(this.imgArray[index]);
@@ -374,10 +377,17 @@ ImageViewer.prototype.download = function(filename, index){
     // });
     // a.dispatchEvent(ev);
 
-    var evnObj = document.createEvent('MouseEvents');
-    evnObj.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,true,false,0,null);
-    a.dispatchEvent(evnObj);
-
+    if (document.createEvent) {
+        var evObj = document.createEvent('MouseEvents');
+        evObj.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,true,false,0,null);
+        a.dispatchEvent(evObj);
+    }else if(document.createEventObject){
+        var evObj = document.createEventObject();
+        a.fireEvent( 'onclick', evObj );
+    }else{
+        //a.click();
+    }
+    
     setTimeout(function(){
         img.oriBlob ? URL.revokeObjectURL(objUrl) : null;
     }, 10000);
