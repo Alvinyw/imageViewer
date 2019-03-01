@@ -388,6 +388,8 @@ ImageViewer.prototype.download = function(filename, index){
         //a.click();
     }
     
+    //lib.fireEvent('click',a);
+    
     setTimeout(function(){
         img.oriBlob ? URL.revokeObjectURL(objUrl) : null;
     }, 10000);

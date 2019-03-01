@@ -1,7 +1,12 @@
 
 function fuc_captureImage(){
     if(!imageViewer){return false;}
-    imageViewer.showFileChooseWindow();
+    try{
+        imageViewer.showFileChooseWindow();
+    }catch(e){
+        console.log("dsfsd");
+    }
+    
 }
 
 function fuc_getCount(){

@@ -221,6 +221,28 @@ lib._querySelectorAll = function(element, selector){
 	}
 };
 
+lib.fireEvent = function (name, el) {
+	var event;
+	if (document.createEvent) {
+		event = document.createEvent('HTMLEvents');
+		event.initEvent(name, true, true);
+
+		if (el.dispatchEvent)
+			el.dispatchEvent(event);
+	}
+	else if (document.createEventObject) {
+		event = document.createEventObject();
+		event.bubbles = true;
+		event.cancelable = true;
+		el.fireEvent(name, event);
+	}
+	else {
+		event = new Event(name);
+		if (el.dispatchEvent)
+			el.dispatchEvent(event);
+	}
+}
+
 //indexOf() do not compatible with IE6-8
 if(!Array.prototype.indexOf){  
 	Array.prototype.indexOf = function(val){  
