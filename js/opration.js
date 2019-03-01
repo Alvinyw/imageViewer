@@ -1,12 +1,14 @@
 
 function fuc_captureImage(){
     if(!imageViewer){return false;}
-    try{
+    if(uaInfo.strVersion <11.0 && uaInfo.bIE){
+        imageViewer.captureImage('https://www.dynamsoft.com/assets/images/dbr-sdk-android-support-illus.png');
+        imageViewer.captureImage('https://www.dynamsoft.com/assets/images/dbr-sdk-ios-support-illus.png');
+        imageViewer.captureImage('https://www.dynamsoft.com/assets/images/dnt-annotation-sdk-feature-illus.png');
+        imageViewer.captureImage('https://www.dynamsoft.com/assets/images/dbr-sdk-ios-work-illus.png');
+    }else{
         imageViewer.showFileChooseWindow();
-    }catch(e){
-        console.log("dsfsd");
     }
-    
 }
 
 function fuc_getCount(){
