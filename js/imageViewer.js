@@ -492,6 +492,7 @@ ImageViewer.prototype._addImgToThumbnail = function (img) {
     }
     
     var ctx = cvs.getContext('2d');
+    console.log(img);
     ctx.drawImage(img,0,0,cvs.width,cvs.height);
 
 }
