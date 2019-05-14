@@ -40,58 +40,70 @@
         '</div>',
         '<div class="thumbnailContainer"></div>'
     ].join('');
-    this._imageViewer = document.getElementById(ImageViewerID);
-    this._imageViewer.innerHTML = containerDiv;
-    this._Canvas = lib._querySelectorAll(this._imageViewer,'canvas.kPainterCanvas')[0];
-    this._imgContainer = lib._querySelectorAll(this._imageViewer,'div.imageContainer')[0];
-    this._imgsDiv = lib._querySelectorAll(this._imageViewer,'div.kPainterImgsDiv')[0];
-    this._thumbnailContainer = lib._querySelectorAll(this._imageViewer,'div.thumbnailContainer')[0];
+    _this._imageViewer = document.getElementById(ImageViewerID);
+    _this._imageViewer.innerHTML = containerDiv;
+    _this._Canvas = lib._querySelectorAll(_this._imageViewer,'canvas.kPainterCanvas')[0];
+    _this._imgContainer = lib._querySelectorAll(_this._imageViewer,'div.imageContainer')[0];
+    _this._imgsDiv = lib._querySelectorAll(_this._imageViewer,'div.kPainterImgsDiv')[0];
+    _this._thumbnailContainer = lib._querySelectorAll(_this._imageViewer,'div.thumbnailContainer')[0];
 
-    this._defaultFileInput = document.createElement("input");
-    this._defaultFileInput.setAttribute("type","file");
-    this._defaultFileInput.setAttribute("accept","image/bmp,image/gif,image/jpeg,image/png,image/webp");
-    this._defaultFileInput.setAttribute("multiple","true");
+    _this._defaultFileInput = document.createElement("input");
+    _this._defaultFileInput.setAttribute("type","file");
+    _this._defaultFileInput.setAttribute("accept","image/bmp,image/gif,image/jpeg,image/png,image/webp");
+    _this._defaultFileInput.setAttribute("multiple","true");
 
-    this._imgContainerW = lib.getElDimensions(this._imgContainer).clientWidth;
-    this._imgContainerH = lib.getElDimensions(this._imgContainer).clientHeight;
+    _this._imageViewerW = lib.getElDimensions(_this._imageViewer).clientWidth;
+    _this._imageViewerH = lib.getElDimensions(_this._imageViewer).clientHeight;
 
-    this._imgsDivW = lib.getElDimensions(this._imgsDiv).clientWidth;
-    this._imgsDivH = lib.getElDimensions(this._imgsDiv).clientHeight;
+    _this._imgContainerW = lib.getElDimensions(_this._imgContainer).clientWidth;
+    _this._imgContainerH = lib.getElDimensions(_this._imgContainer).clientHeight;
 
-    this._thumbnailContainerW = lib.getElDimensions(this._thumbnailContainer).clientWidth;
-    this._thumbnailContainerH = lib.getElDimensions(this._thumbnailContainer).clientHeight;
+    _this._imgsDivW = lib.getElDimensions(_this._imgsDiv).clientWidth;
+    _this._imgsDivH = lib.getElDimensions(_this._imgsDiv).clientHeight;
 
-    this.curIndex = -1;
-    this.imgArray = [];
-    this.thumbnailArray = [];
+    _this._thumbnailContainerW = lib.getElDimensions(_this._thumbnailContainer).clientWidth;
+    _this._thumbnailContainerH = _this._imageViewerH*0.2;
 
-    lib.addEvent(this._defaultFileInput,"change", function(event) {
+    _this.curIndex = -1;
+    _this.aryImages = [];
+
+    _this.aryThumbnailImages = [];
+    // Thumbnails 中每行的控件数
+    _this.thumbnailImagesPerRow = Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH)>2?Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH):3;
+    // Thumbnails 中多个控件之间的距离
+    _this.ThumbnailImageMargin = 10;
+    // Thumbnails 中的小控件的宽度
+    _this.ThumbnailControlW = 0;
+    // Thumbnails 中的小控件的高度
+    _this.ThumbnailControlH = 0;
+    _this.divThumbnail = document.createElement('div');
+	_this.divThumbnail.style.width = _this._thumbnailContainerW  + 'px';
+    _this.divThumbnail.style.height = _this._thumbnailContainerH + 'px';
+    _this._thumbnailContainer.appendChild(_this.divThumbnail);
+
+    lib.addEvent(_this._defaultFileInput,"change", function(event) {
         var ev = event || window.event;
         _this._addFilesFromLocal(ev.target.files);
     });
 
-    lib.addEvent(this._imageViewer,"dragover", function(event) {
+    lib.addEvent(_this._imageViewer,"dragover", function(event) {
         var ev = event || window.event;
 		lib.stopDefault(ev);
-        // event.stopPropagation();
-        // event.preventDefault();
     });
 
-    lib.addEvent(this._imageViewer,"drop", function(event) {
+    lib.addEvent(_this._imageViewer,"drop", function(event) {
         var ev = event || window.event;
 		lib.stopDefault(ev);
-        // event.stopPropagation();
-        // event.preventDefault();
         _this._addFilesFromLocal(ev.dataTransfer.files);
     });
 
-    this._startPos = {};
-    lib.addEvent(this._imgContainer,"touchstart", fuc_touchstart);
-    lib.addEvent(this._imgContainer,"touchmove", fuc_touchmove);
-    lib.addEvent(this._imgContainer,"touchend", fuc_touchend);
+    _this._startPos = {};
+    lib.addEvent(_this._imgContainer,"touchstart", fuc_touchstart);
+    lib.addEvent(_this._imgContainer,"touchmove", fuc_touchmove);
+    lib.addEvent(_this._imgContainer,"touchend", fuc_touchend);
 
-    lib.addEvent(this._imgContainer,"mousedown", fuc_touchstart);
-    lib.addEvent(this._imgContainer,"mouseup", fuc_touchend);
+    lib.addEvent(_this._imgContainer,"mousedown", fuc_touchstart);
+    lib.addEvent(_this._imgContainer,"mouseup", fuc_touchend);
     
     function fuc_touchstart(event){
         var ev = event || window.event;
@@ -135,14 +147,14 @@
                 _curOffsetY = ev.clientY - _this._startPos.startY;
         }
 
-        var _imgArray =  _this.imgArray,
+        var _aryImages =  _this.aryImages,
             _curIndex = _this.curIndex,
-            _pIndex = (_curIndex - 1)<0?(_imgArray.length-1):(_curIndex - 1),
-            _nIndex = (_curIndex + 1)>(_imgArray.length-1)?0:(_curIndex + 1);
+            _pIndex = (_curIndex - 1)<0?(_aryImages.length-1):(_curIndex - 1),
+            _nIndex = (_curIndex + 1)>(_aryImages.length-1)?0:(_curIndex + 1);
 
-        _imgArray[_curIndex].style.left = (_this._imgsDivW - _imgArray[_curIndex].width)/2 + _curOffsetX + "px";
-        _imgArray[_pIndex].style.right = _this._imgContainerW - _curOffsetX + "px";
-        _imgArray[_nIndex].style.left = _this._imgContainerW + _curOffsetX + "px";
+        _aryImages[_curIndex].SetLocation((_this._imgsDivW - _aryImages[_curIndex]._width)/2 + _curOffsetX);
+        _aryImages[_pIndex].SetLocation(-(_this._imgContainerW - _curOffsetX));
+        _aryImages[_nIndex].SetLocation(_this._imgContainerW + _curOffsetX);
 
         //console.log('pageX: '+touches[0].pageX+" pageY: "+touches[0].pageY);   
     }
@@ -168,19 +180,20 @@
                 _curOffsetY = ev.clientY - _this._startPos.startY;
         }
 
-        var _imgArray =  _this.imgArray,
+        var _aryImages =  _this.aryImages,
             _curIndex = _this.curIndex,
-            _pIndex = (_curIndex - 1)<0?(_imgArray.length-1):(_curIndex - 1),
-            _nIndex = (_curIndex + 1)>(_imgArray.length-1)?0:(_curIndex + 1);
+            _pIndex = (_curIndex - 1)<0?(_aryImages.length-1):(_curIndex - 1),
+            _nIndex = (_curIndex + 1)>(_aryImages.length-1)?0:(_curIndex + 1);
 
         if(_curOffsetX>_this._imgsDivW/3){
             _this.changePage('p');
         }else if(_curOffsetX<-_this._imgsDivW/3){
             _this.changePage('n');
         }else{
-            _imgArray[_curIndex].style.left = (_this._imgsDivW - _imgArray[_curIndex].width)/2 + 'px';
-            _imgArray[_pIndex].style.right = _this._imgContainerW + 'px';
-            _imgArray[_nIndex].style.left = _this._imgContainerW + 'px';
+            // _aryImages[_curIndex].style.left = (_this._imgsDivW - _aryImages[_curIndex].width)/2 + 'px';
+            // _aryImages[_pIndex].style.right = _this._imgContainerW + 'px';
+            // _aryImages[_nIndex].style.left = _this._imgContainerW + 'px';
+            _this.__ReInitImageControlPosition();
         }
     }
 
@@ -195,77 +208,75 @@ ImageViewer.prototype.adaptiveLayout = function () {
 
     this._thumbnailContainerW = lib.getElDimensions(this._thumbnailContainer).clientWidth;
     this._thumbnailContainerH = lib.getElDimensions(this._thumbnailContainer).clientHeight;
-
-    this._fitImage(_this.imgArray[_this.curIndex]);
 }
 
-ImageViewer.prototype.captureImage = function (url) {
-    var _this = this;
-    var img = new Image();
-    img.className = 'imgArray-item';
-	img.setAttribute('alt', 'image');
-    img.onload = function(){
-        img.oriWidth = img.naturalWidth || img.width;
-        img.oriHeight = img.naturalHeight || img.height;
-        img.curWidth = img.naturalWidth || img.width;
-        img.curHeight = img.naturalHeight || img.height;
-        
-        _this.imgArray.push(img);
-        _this._addImgToContainer(img);
+ImageViewer.prototype.LoadImage = function (url) {
+    var _this = this, cfg = {};
+    cfg.viewer = _this;
+    cfg.imageViewerW = _this._imageViewerW;
+    cfg.imageViewerH = _this._imageViewerH;
+    cfg.imgContainerW = _this._imgsDivW;
+    cfg.imgContainerH = _this._imgsDivH;
+    cfg.index = _this.curIndex = _this.aryImages.length;
 
-        _this._addImgToThumbnail(img.cloneNode(true));
-
-        _this.curIndex ++;
-        _this.showImage(_this.curIndex);        
-    }
-    img.onerror = function(){
-        console.log("Failed to create image node."); 
-    }
-
-    try{
-        if(url instanceof Blob){
-            img.src = URL.createObjectURL(url);
-            img.oriBlob = url;
-        }else{
-            img.src = url;
-        }   
-    }catch(e) {
-        img.src = url;
+    if(url instanceof Blob){
+        cfg.imageUrl = URL.createObjectURL(url);
+    }else{
+        cfg.imageUrl = url;
     }   
+    
+    // 添加 ImageControl 
+    var objImageControl = new ImageControl(cfg);
+    _this.aryImages.push(objImageControl);
+    _this._addImgToContainer(objImageControl.GetEL());
+
+    // 添加 ThumbnailControl 
+    var objThumbnailControl = new ThumbnailControl(cfg);
+    _this.aryThumbnailImages.push(objThumbnailControl);
+    _this._addImgToThumbnail(objThumbnailControl.GetEL());
+
+    _this.__ResetSelection();
 
     return true;
 }
 
-ImageViewer.prototype.captureImageWithBlob = function (url) {
+ImageViewer.prototype.GetThumbnailImageMargin = function () {
+    var _this = this;
+    return _this.ThumbnailImageMargin;
+};
+
+ImageViewer.prototype.SetThumbnailImageMargin = function (v) {
+    var _this = this;
+
+    if (v <= 0 || (v > _this._thumbnailContainerW /  _this.thumbnailImagesPerRow) || (v > _this._thumbnailContainerH)) {
+        return false;
+    }else{
+        _this.ThumbnailImageMargin = parseInt(v);
+
+        _this.__ReInitThumbnailControlPosition();
+        return true;
+    }
+};
+
+ImageViewer.prototype.LoadImageWithBlob = function (url) {
     var _this = this;
     lib.getBlobFromAnyImgData(url, function(blob){
-        _this.captureImage(blob);
+        _this.LoadImage(blob);
     });
 
     return true;
 }
 
 ImageViewer.prototype.showImage = function (index) {
-    if(index<0 || index>this.imgArray.length-1){ return false; }
-      
-    //update thumbnail
-    var _thumArr = this.thumbnailArray;
+    var _this = this;
 
-    for(var i = 0;i<_thumArr.length;i++){
-        if(i==index){
-            lib.addClass(_thumArr[i],'on');
-        }
-        else{
-           lib.removeClass(_thumArr[i],'on');
-        }
-    }
+    if(index<0 || index>_this.aryImages.length-1){ return false; }
+    _this.curIndex = index;
 
-    this.curIndex = index;
+    _this.__ReInitImageControlPosition();
+    _this.__ResetSelection();
 
-    //update image container
-    this._updateImagePosition();
-
-    this._updateNumUI();
+    _this._updateNumUI();
     return true;
 }
 
@@ -275,7 +286,7 @@ ImageViewer.prototype.changePage = function(cmd){
         case "f": _index = 0; break;
         case "p": _index = this.curIndex - 1; break;
         case "n": _index = this.curIndex + 1; break;
-        case "l": _index = this.imgArray.length - 1; break;
+        case "l": _index = this.aryImages.length - 1; break;
         default: 
             if(arguments.length < 1 || isNaN(cmd)){
                 return false;
@@ -285,8 +296,8 @@ ImageViewer.prototype.changePage = function(cmd){
     }
     /*eslint-enable indent*/
     if(_index<0){
-        _index = this.imgArray.length -1;
-    }else if(_index>this.imgArray.length-1){
+        _index = this.aryImages.length -1;
+    }else if(_index>this.aryImages.length-1){
         _index = 0;
     }
 
@@ -299,15 +310,15 @@ ImageViewer.prototype.getCurentIndex = function () {
 }
 
 ImageViewer.prototype.getCount = function () {
-    return this.imgArray.length;
+    return this.aryImages.length;
 }
 
 ImageViewer.prototype.getImage = function (index,isOri) {
     var _curIndex = index || this.curIndex;
     if(isOri){
-        return this.imgArray[_curIndex];
+        return this.aryImages[_curIndex];
     }else{
-        return this.imgArray[_curIndex].cloneNode(true);
+        return this.aryImages[_curIndex].cloneNode(true);
     }
     
 }
@@ -315,17 +326,17 @@ ImageViewer.prototype.getImage = function (index,isOri) {
 ImageViewer.prototype.deleteImage = function (index) {
     if(arguments.length!=1){
         index = this.curIndex;
-    }else if(index < 0 || index >= this.imgArray.length){ 
+    }else if(index < 0 || index >= this.aryImages.length){ 
         return false;
     }
     
     //update image container
-    this._imgsDiv.removeChild(this.imgArray[index]);
-    this.imgArray.splice(index, 1);
+    this._imgsDiv.removeChild(this.aryImages[index]);
+    this.aryImages.splice(index, 1);
 
     //update thumbnail container
-    this._thumbnailContainer.removeChild(this.thumbnailArray[index]);
-    this.thumbnailArray.splice(index, 1);
+    this._thumbnailContainer.removeChild(this.aryThumbnailImages[index]);
+    this.aryThumbnailImages.splice(index, 1);
 
     if(index < this.curIndex){
         this.curIndex--;
@@ -346,10 +357,10 @@ ImageViewer.prototype.download = function(filename, index){
     }
     if(isNaN(index)){ return false; }
     index = Math.round(index);
-    if(index < 0 || index >= this.imgArray.length){ return false; }
+    if(index < 0 || index >= this.aryImages.length){ return false; }
     var a = document.createElement('a');
     a.target='_blank';
-    var img = this.imgArray[index];
+    var img = this.aryImages[index];
     var blob = img.oriBlob || img.src;
     if(!filename){
         var suffix = "";
@@ -401,38 +412,6 @@ ImageViewer.prototype.showFileChooseWindow = function(){
     return true;
 };
 
-ImageViewer.prototype._updateImagePosition = function(){
-    var _imgArray = this.imgArray,
-        _curIndex = this.curIndex,
-        _pIndex = (_curIndex - 1)<0?(_imgArray.length-1):(_curIndex - 1),
-        _nIndex = (_curIndex + 1)>(_imgArray.length-1)?0:(_curIndex + 1);
-
-    for(var i=0;i<_imgArray.length;i++){
-        if(i!=_curIndex && i!=_pIndex && i!= _nIndex){
-            _imgArray[i].style.display = 'none';
-        }else{
-            _imgArray[i].style.display = 'block';
-        }
-        _imgArray[i].style.right = '';
-        _imgArray[i].style.left = '';
-    } 
-
-    _imgArray[_curIndex].style.left = (this._imgsDivW - _imgArray[_curIndex].width)/2 + 'px';
-    //_imgArray[_curIndex].style.right = '0';
-
-    if(_pIndex!=_curIndex){
-        _imgArray[_pIndex].style.left = '';
-        _imgArray[_pIndex].style.right = this._imgContainerW + 'px';
-    }
-
-    if(_nIndex!=_curIndex && _nIndex!=_pIndex){
-        _imgArray[_nIndex].style.right = '';
-        _imgArray[_nIndex].style.left = this._imgContainerW + 'px';
-    }
-
-    return true;
-};
-
 ImageViewer.prototype._addFilesFromLocal = function (files) {
     var _this = this;
     if(files instanceof Array || files instanceof FileList){
@@ -442,63 +421,128 @@ ImageViewer.prototype._addFilesFromLocal = function (files) {
     }else{
         var reader = new FileReader();
         reader.onload = function(){
-            _this.captureImageWithBlob(reader.result);
+            _this.LoadImageWithBlob(reader.result);
         };
         reader.readAsDataURL(files);
     }
 }
 
-ImageViewer.prototype._fitImage = function (img) {
-    var containerAspectRatio = this._imgsDivW / this._imgsDivH;
-    var imgAspectRatio = img.oriWidth / img.oriHeight;
-
-    if(imgAspectRatio>containerAspectRatio){
-        img.width = this._imgsDivW;
-        img.height = img.width/imgAspectRatio;
-    }else {
-        img.height = this._imgsDivH;
-        img.width = img.height*imgAspectRatio;
-    }
-}
-
-ImageViewer.prototype._addImgToContainer = function (img) {
-    this._fitImage(img);
-    this._imgsDiv.appendChild(img);
-}
-
-ImageViewer.prototype._addImgToThumbnail = function (img) {
+ImageViewer.prototype._addImgToContainer = function (objImageControl) {
     var _this = this;
-    var cvs = document.createElement("canvas");
 
-    var newDiv = document.createElement("div");
-    newDiv.className = 'thumbnail-item on';
-    lib.addEvent(newDiv,"click", function(){
-        _this.showImage(_this.thumbnailArray.indexOf(newDiv));
-    });
-    newDiv.appendChild(cvs); 
-    this.thumbnailArray.push(newDiv);
-    this._thumbnailContainer.appendChild(newDiv);
+    _this._imgsDiv.appendChild(objImageControl);
 
-    if (!cvs.getContext) {
-		G_vmlCanvasManager.initElement(cvs)
-    }
-
-    if(uaInfo.strVersion<9.0){
-        cvs.width = this._thumbnailContainerW*0.90/3;
-        cvs.height = this._thumbnailContainerH*0.85;
-    }else{
-        cvs.width = this._thumbnailContainerW/3;
-        cvs.height = this._thumbnailContainerH;
-    }
-    
-    var ctx = cvs.getContext('2d');
-    console.log(img);
-    ctx.drawImage(img,0,0,cvs.width,cvs.height);
-
+    _this.__ReInitImageControlPosition();
+    return true;
 }
+
+ImageViewer.prototype._addImgToThumbnail = function (objThumbnailControl) {
+    var _this = this;
+
+    _this.divThumbnail.appendChild(objThumbnailControl);
+
+    _this.__ReInitThumbnailControlPosition();
+    _this.__recalculateDivThumbnailSize();
+
+    return true;
+}
+
+ImageViewer.prototype.__ResetSelection = function () {
+    var _this = this, i = 0;
+
+    // Update selected image in Thumbnail
+    for (i = 0; i < _this.aryThumbnailImages.length; i++) {
+        var thumbControl = _this.aryThumbnailImages[i];
+        if (thumbControl.bVisible) {
+            if (thumbControl.cIndex != _this.curIndex)
+                thumbControl.SetSelect(false);
+            else if (thumbControl.cIndex == _this.curIndex)
+                thumbControl.SetSelect(true);
+        }
+    }
+};
+
+ImageViewer.prototype.__recalculateDivThumbnailSize = function () {
+    var _this = this;
+    var aryThumbImages = _this.aryThumbnailImages;
+    var _newWidth = _this.ThumbnailImageMargin;
+    for(var i=0;i<aryThumbImages.length;i++){
+        _newWidth += aryThumbImages[i].GetControlWidth() + _this.ThumbnailImageMargin;
+    }
+    _this.divThumbnail.style.width = (_newWidth>_this._thumbnailContainerW?_newWidth:_this.imageViewWidth) + 'px';
+
+    _this._thumbnailContainer.scrollLeft = _this._thumbnailContainer.scrollWidth;
+
+    return true;
+}
+
+ImageViewer.prototype.__ReInitImageControlPosition = function () {
+    var _this = this;
+    
+    var _aryImages =  _this.aryImages,
+        _curIndex = _this.curIndex,
+        _pIndex = (_curIndex - 1)<0?(_aryImages.length-1):(_curIndex - 1),
+        _nIndex = (_curIndex + 1)>(_aryImages.length-1)?0:(_curIndex + 1);
+
+    for(var i=0;i<_aryImages.length;i++){
+        if(i == _curIndex){
+            _aryImages[_curIndex].SetLocation();
+        }else if(i==_pIndex){
+            _aryImages[_pIndex].SetLocation(-_this._imgContainerW);
+        }else if(i==_nIndex){
+            _aryImages[_nIndex].SetLocation(_this._imgContainerW);
+        }else{
+            _aryImages[i].SetLocation(_this._imgContainerW);
+        }
+    }
+
+    return true;
+}
+
+ImageViewer.prototype.__ReInitThumbnailControlPosition = function () {
+    var _this = this, x, y, i;
+
+    _this.__InitThumbnailControlsSize();
+
+    x = _this.ThumbnailImageMargin;
+    y = _this.ThumbnailImageMargin;
+
+    for (i = 0; i < _this.aryThumbnailImages.length; i++) {
+        var thumbnailControl = _this.aryThumbnailImages[i], bindIndex = thumbnailControl.cIndex;
+        
+        // avoid unnecessary action
+        if (thumbnailControl._width != _this.ThumbnailControlW || thumbnailControl._height != _this.ThumbnailControlH){
+            thumbnailControl.ChangeControlSize(_this.ThumbnailControlW, _this.ThumbnailControlH);
+        }				
+
+        thumbnailControl.SetLocation(x, y);
+
+        x = thumbnailControl.Left + _this.ThumbnailControlW + _this.ThumbnailImageMargin;
+        y = _this.ThumbnailImageMargin;
+        
+        // check bind index
+        if(bindIndex<0 || bindIndex>=_this.aryThumbnailImages.length) {
+            thumbnailControl.ClearControl();
+            continue;
+        }
+        
+    }
+};
+
+ImageViewer.prototype.__InitThumbnailControlsSize = function () {
+    //计算 Thumbnail 控件的 _this.ThumbnailControlW;  _this.ThumbnailControlH; 
+    var _this = this;
+
+    var iTotalWidth = _this._thumbnailContainerW - _this.ThumbnailImageMargin,
+        iTotalHeight = _this._thumbnailContainerH - _this.ThumbnailImageMargin;
+
+    _this.ThumbnailControlW = parseInt(iTotalWidth / _this.thumbnailImagesPerRow - _this.ThumbnailImageMargin);
+    _this.ThumbnailControlH = parseInt(iTotalHeight - _this.ThumbnailImageMargin);
+
+};
+
 
 ImageViewer.prototype.onNumChange = null;
 ImageViewer.prototype._updateNumUI = function(){
-    lib.doCallbackNoBreak(this.onNumChange,[this.curIndex, this.imgArray.length]);
-};
-
+    lib.doCallbackNoBreak(this.onNumChange,[this.curIndex, this.aryImages.length]);
+}

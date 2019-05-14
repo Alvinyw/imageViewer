@@ -55,11 +55,7 @@ body{ width:100%; height:100%;}
 .kPainterBox  .kPainterPerspect  .kPainterPerspectCorner{position:absolute;margin:auto;width:20px;height:20px;border-radius:10px;border:2px solid #0f0;color:#fff;background:rgba(0,0,0,0.3);text-align:center;line-height:16px;font-size:12px;font-family:Arial,sans-serif;z-index:1;cursor:move;}
 .kPainterBox  .kPainterGesturePanel{position:absolute;left:0;top:0;width:100%;height:100%;}
 
-.thumbnailContainer { padding: 2% 0 3% 2%; width: 100%; *width:98%; height: 25%; white-space: nowrap; overflow: scroll; overflow-y: hidden; }
-.thumbnailContainer:after { content: ''; display: inline-block; clear: both; }
-.thumbnailContainer .thumbnail-item { margin: 0 2% 0 0; width: 31.33%; *width:30.69%; height: 100%; *height:95%; *float: left; display: inline-block; border: 1px solid #ccc; cursor: pointer; }
-.thumbnailContainer .thumbnail-item.on { border-color: #50a8e1;}
-.thumbnailContainer .thumbnail-item canvas { width:100%; height: 100%; }
+.thumbnailContainer { width: 100%; overflow-y: hidden; }
 .thumbnailContainer .thumbnail-item .div-trashFog { display: none; }
 
 .grayFog{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.3);z-index:1;}
