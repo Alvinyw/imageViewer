@@ -1,12 +1,24 @@
+var imageViewer = new ImageViewer("imageViewer");
+
+imageViewer.onNumChange = function(curIndex,imgCount){
+    var _curIndex = parseInt(curIndex)+1;
+    //console.log('curIndex '+_curIndex+' imgCount: '+imgCount);
+}
+
+window.onresize = function(){
+    var imgCount = imageViewer.getCount();
+    if(imgCount>0){
+        imageViewer.adaptiveLayout();
+    }
+};
 
 function fuc_LoadImage(){
     if(!imageViewer){return false;}
     if(uaInfo.strVersion <11.0 && uaInfo.bIE){
-        imageViewer.LoadImage('https://www.dynamsoft.com/assets/images/dbr-sdk-android-support-illus.png');
-        imageViewer.LoadImage('https://www.dynamsoft.com/assets/images/dbr-sdk-ios-support-illus.png');
-        imageViewer.LoadImage('https://www.dynamsoft.com/assets/images/dnt-annotation-sdk-feature-illus.png');
-        imageViewer.LoadImage('https://www.dynamsoft.com/assets/images/dbr-sdk-ios-work-illus.png');
-		
+        imageViewer.LoadImage('http://localhost:82/dbrjs6.5/assets/images/cs-yc.png');
+        imageViewer.LoadImage('http://localhost:82/dbrjs6.5/assets/images/cs-avanza.png');
+        imageViewer.LoadImage('http://localhost:82/dbrjs6.5/assets/images/cs-lm.png');
+        imageViewer.LoadImage('http://localhost:82/dbrjs6.5/assets/images/cs-ibm.png');
     }else{
         imageViewer.showFileChooseWindow();
     }
@@ -47,3 +59,200 @@ function fuc_download(){
     if(!imageViewer){return false;}
     imageViewer.download();
 }
+
+function fuc_showVideo(){
+	if(!imageViewer){return false;}
+    imageViewer.showVideo();
+}
+
+function fuc_enterEdit(){
+	if(!imageViewer){return false;}
+    imageViewer.enterEdit();
+}
+
+function fuc_cancelEdit(){
+	if(!imageViewer){return false;}
+    imageViewer.cancelEdit();
+}
+
+function fuc_rotateLeft(){
+	if(!imageViewer){return false;}
+    imageViewer.rotateLeft();
+}
+
+function fuc_rotateRight(){
+	if(!imageViewer){return false;}
+    imageViewer.rotateRight();
+}
+
+imageViewer._defaultFileInput.accept += ',image/tiff,application/pdf';
+
+var getCvsFromTif = function(blob, handlePromise){
+    return new Promise(function(resolve, reject){
+        if(self.Tiff){
+            resolve();
+        }else{
+            console.log('loading tiff component...');
+            var script = document.createElement('script');
+            script.src = 'js/tiff.min.js';
+            self.onTiffJsLoadSuccess = function(){
+                //initialize with 100MB for large files
+                Tiff.initialize({
+                    TOTAL_MEMORY: 100000000
+                });
+                resolve();
+            };
+            script.onerror = function(ex){
+                //tudo test it
+                reject(script.error || ex || 'load tiff js fail');
+            };
+            document.body.appendChild(script);
+        }
+    }).then(function(){
+        console.log('parsing the tiff...');
+        return new Promise(function(resolve, reject){
+            var fr = new FileReader();
+            fr.onload = function(){
+                resolve(fr.result);
+            };
+            fr.onerror = function(){
+                reject(fr.error);
+            };
+            fr.readAsArrayBuffer(blob);
+        });
+    }).then(function(arrayBuffer){
+        var tiff = new Tiff({
+            buffer: arrayBuffer
+        });
+        var taskQueue = new TaskQueue();
+        for (var j = 0, len = tiff.countDirectory(); j < len; ++j) {
+            //taskQueue.push(function(j){
+                tiff.setDirectory(j);
+                handlePromise(tiff.toCanvas()).then(function(){
+                    taskQueue.next();
+                });
+            //},null,[j]);
+        }
+        // return new Promise(function(resolve){
+        //     taskQueue.push(function(){
+        //         resolve();
+        //     });
+        // });
+    });
+};
+
+var getCvsFromPdf = function(blob, handlePromise){
+    return new Promise(function(resolve, reject){
+        if(self.pdfjsLib){
+            resolve();
+        }else{
+            console.log('loading pdf component...');
+            var script = document.createElement('script');
+            script.src = 'js/pdf.js';
+            self.onPdfJsLoadSuccess = function(){
+                self.pdfjsLib = window['pdfjs-dist/build/pdf'];
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.js';
+                resolve();
+            };
+            script.onerror = function(ex){
+                //tudo test it
+                reject(script.error || ex || 'load pdf js fail');
+            };
+            document.body.appendChild(script);
+        }
+    }).then(function(){
+        console.log('parsing the pdf...');
+        return new Promise(function(resolve, reject){
+            var fr = new FileReader();
+            fr.onload = function(){
+                resolve(fr.result);
+            };
+            fr.onerror = function(){
+                reject(fr.error);
+            };
+            fr.readAsArrayBuffer(blob);
+        });
+    }).then(function(arrayBuffer){
+        return pdfjsLib.getDocument(arrayBuffer);
+    }).then(function(pdf){
+        return new Promise(function(resolve, reject){
+            var cvsAry = new Array();
+            for(var i = 1; i<= pdf.numPages; i++){
+                var cvs = null;
+                pdf.getPage(i).then(function(page){
+                    var viewport = page.getViewport(1);
+                    cvs = document.createElement('canvas');
+                    cvs.width = viewport.width;
+                    cvs.height = viewport.height;
+
+                    // for test
+                    cvs.setAttribute('id', 'page-' + (page.pageIndex + 1));
+
+
+                    cvsAry.push(cvs);
+                    var ctx = cvs.getContext('2d');
+                    return page.render({
+                        canvasContext: ctx,
+                        viewport: viewport
+                    });
+                }).then(function(){
+                    resolve(cvsAry);
+                })['catch'](function(ex){
+                    reject(ex);
+                });
+            }
+        }).then(function(cvsAry){
+            console.log(cvsAry);
+            imageViewer.LoadImage(cvsAry);
+
+            // for(var i=0;i<cvsAry.length;i++){
+            //     //document.body.appendChild(cvsAry[i]);
+            //     cvsAry[i].toBlob(function(blob) {
+            //         var newImg = document.createElement("img"),
+            //             url = URL.createObjectURL(blob);
+                  
+            //         newImg.onload = function() {
+            //           // no longer need to read the blob so it's revoked
+            //           URL.revokeObjectURL(url);
+            //         };
+                  
+            //         newImg.src = url;
+            //         document.body.appendChild(newImg);
+            //       });
+            // }
+
+            // document.body.appendChild(cvsAry[0]);
+        });
+    })
+};
+
+self.addImageFromUrlWithPdfTiffAsync = imageViewer.beforeAddImgFromFileChooseWindow = imageViewer.beforeAddImgFromDropFile = function(src, callback){
+    var files = null;
+    if(typeof src == "string" || src instanceof String){
+        // url
+        files = ['placeholder'];
+        lib.convertURLToBlob(src, function(blob){
+            files = [blob];
+        });
+
+    }else{
+        // input || drop 
+        files = src.target.files || src.dataTransfer.files;
+    }
+    for(var i = 0; i < files.length; ++i){
+        //taskQueue.push(function(i){
+            var file = files[i];
+            if('image/tiff' == file.type){
+                getCvsFromTif(file, imageViewer.LoadImage);
+            }else if('application/pdf' == file.type){
+                getCvsFromPdf(file, imageViewer.LoadImage);
+            }else{
+                imageViewer.LoadImage(file);
+            }
+        //}, null, [i]);
+    }
+    // callback
+    if(callback){
+        callback();
+    }
+};

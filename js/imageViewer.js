@@ -2,47 +2,15 @@
     var _this = this;
     var containerDiv = [
         '<div class="imageContainer">',
-            '<div class="kPainterBox">',
-                '<div class="kPainterImgsDiv">',
-                    '<canvas class="kPainterCanvas" style="display:none;left:0;top:0;"></canvas>',
-                '</div',
-                '><div class="kPainterCroper" style="width:50px;height:50px;display:none;">',
-                    '<div class="kPainterCells">',
-                        '<div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>',
-                    '</div',
-                    '><div class="kPainterBigMover" data-orient="0,0" style="display:none"></div',
-                    '><div class="kPainterEdges">',
-                        '<div data-orient="-1,0"></div',
-                        '><div data-orient="0,-1"></div',
-                        '><div data-orient="1,0"></div',
-                        '><div data-orient="0,1"></div>',
-                    '</div',
-                    '><div class="kPainterCorners">',
-                        '<div data-orient="-1,-1"><i></i></div',
-                        '><div data-orient="1,-1"><i></i></div',
-                        '><div data-orient="1,1"><i></i></div',
-                        '><div data-orient="-1,1"><i></i></div>',
-                    '</div',
-                    '><div class="kPainterMover" data-orient="0,0">',
-                        '<div></div>',
-                        '<svg width="20" height="20" viewBox="0 0 1792 1792" xmlns="http://www.w3.org/2000/svg"><path d="M1792 896q0 26-19 45l-256 256q-19 19-45 19t-45-19-19-45v-128h-384v384h128q26 0 45 19t19 45-19 45l-256 256q-19 19-45 19t-45-19l-256-256q-19-19-19-45t19-45 45-19h128v-384h-384v128q0 26-19 45t-45 19-45-19l-256-256q-19-19-19-45t19-45l256-256q19-19 45-19t45 19 19 45v128h384v-384h-128q-26 0-45-19t-19-45 19-45l256-256q19-19 45-19t45 19l256 256q19 19 19 45t-19 45-45 19h-128v384h384v-128q0-26 19-45t45-19 45 19l256 256q19 19 19 45z" fill="#fff"/></svg>',
-                    '</div>',
-                '</div',
-                '><div class="kPainterPerspect" style="display:none;">',
-                    '<canvas class="kPainterPerspectCvs"></canvas',
-                    '><div class="kPainterPerspectCorner" data-index="0">lt</div',
-                    '><div class="kPainterPerspectCorner" data-index="1">rt</div',
-                    '><div class="kPainterPerspectCorner" data-index="2">rb</div',
-                    '><div class="kPainterPerspectCorner" data-index="3">lb</div>',
-                '</div',
-                '><div class="kPainterGesturePanel"></div>',
+            '<div class="kPainterImgsDiv">',
+                '<canvas class="kPainterCanvas" style="display:none;position:absolute;"></canvas>',
             '</div>',
         '</div>',
         '<div class="thumbnailContainer"></div>'
     ].join('');
     _this._imageViewer = document.getElementById(ImageViewerID);
     _this._imageViewer.innerHTML = containerDiv;
-    _this._Canvas = lib._querySelectorAll(_this._imageViewer,'canvas.kPainterCanvas')[0];
+    _this._canvas = lib._querySelectorAll(_this._imageViewer,'canvas.kPainterCanvas')[0];
     _this._imgContainer = lib._querySelectorAll(_this._imageViewer,'div.imageContainer')[0];
     _this._imgsDiv = lib._querySelectorAll(_this._imageViewer,'div.kPainterImgsDiv')[0];
     _this._thumbnailContainer = lib._querySelectorAll(_this._imageViewer,'div.thumbnailContainer')[0];
@@ -52,38 +20,39 @@
     _this._defaultFileInput.setAttribute("accept","image/bmp,image/gif,image/jpeg,image/png,image/webp");
     _this._defaultFileInput.setAttribute("multiple","true");
 
-    _this._imageViewerW = lib.getElDimensions(_this._imageViewer).clientWidth;
-    _this._imageViewerH = lib.getElDimensions(_this._imageViewer).clientHeight;
-
-    _this._imgContainerW = lib.getElDimensions(_this._imgContainer).clientWidth;
-    _this._imgContainerH = lib.getElDimensions(_this._imgContainer).clientHeight;
-
-    _this._imgsDivW = lib.getElDimensions(_this._imgsDiv).clientWidth;
-    _this._imgsDivH = lib.getElDimensions(_this._imgsDiv).clientHeight;
-
-    _this._thumbnailContainerW = lib.getElDimensions(_this._thumbnailContainer).clientWidth;
-    _this._thumbnailContainerH = _this._imageViewerH*0.2;
-
     _this.curIndex = -1;
+
+    // ImageViewer 当前所处的模式：view、edit
+    _this.mode = 'view';
+
+    _this.errorCode = 0;
+    _this.errorString = '';
+
+    // ImageControl 数组
     _this.aryImages = [];
+    _this.BackgroundColor = "#FFFFFF";
 
     _this.aryThumbnailImages = [];
-    // Thumbnails 中每行的控件数
-    _this.thumbnailImagesPerRow = Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH)>2?Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH):3;
     // Thumbnails 中多个控件之间的距离
     _this.ThumbnailImageMargin = 10;
     // Thumbnails 中的小控件的宽度
     _this.ThumbnailControlW = 0;
     // Thumbnails 中的小控件的高度
+    _this.ThumbnailBackgroundColor = "#FFFFFF";
     _this.ThumbnailControlH = 0;
     _this.divThumbnail = document.createElement('div');
-	_this.divThumbnail.style.width = _this._thumbnailContainerW  + 'px';
-    _this.divThumbnail.style.height = _this._thumbnailContainerH + 'px';
+    _this.divThumbnail.style.width = _this._thumbnailContainerW  + 'px';
     _this._thumbnailContainer.appendChild(_this.divThumbnail);
 
     lib.addEvent(_this._defaultFileInput,"change", function(event) {
         var ev = event || window.event;
-        _this._addFilesFromLocal(ev.target.files);
+
+        if(_this.beforeAddImgFromFileChooseWindow){
+            lib.doCallbackNoBreak(_this.beforeAddImgFromFileChooseWindow, [ev, false]);
+        }else{
+            _this.LoadImage(ev.target.files);
+        }
+
     });
 
     lib.addEvent(_this._imageViewer,"dragover", function(event) {
@@ -94,7 +63,7 @@
     lib.addEvent(_this._imageViewer,"drop", function(event) {
         var ev = event || window.event;
 		lib.stopDefault(ev);
-        _this._addFilesFromLocal(ev.dataTransfer.files);
+        _this.LoadImage(ev.dataTransfer.files);
     });
 
     _this._startPos = {};
@@ -152,7 +121,7 @@
             _pIndex = (_curIndex - 1)<0?(_aryImages.length-1):(_curIndex - 1),
             _nIndex = (_curIndex + 1)>(_aryImages.length-1)?0:(_curIndex + 1);
 
-        _aryImages[_curIndex].SetLocation((_this._imgsDivW - _aryImages[_curIndex]._width)/2 + _curOffsetX);
+        _aryImages[_curIndex].SetLocation((_this._imgsDivW - _aryImages[_curIndex].controlWidth)/2 + _curOffsetX);
         _aryImages[_pIndex].SetLocation(-(_this._imgContainerW - _curOffsetX));
         _aryImages[_nIndex].SetLocation(_this._imgContainerW + _curOffsetX);
 
@@ -180,37 +149,113 @@
                 _curOffsetY = ev.clientY - _this._startPos.startY;
         }
 
-        var _aryImages =  _this.aryImages,
-            _curIndex = _this.curIndex,
-            _pIndex = (_curIndex - 1)<0?(_aryImages.length-1):(_curIndex - 1),
-            _nIndex = (_curIndex + 1)>(_aryImages.length-1)?0:(_curIndex + 1);
-
         if(_curOffsetX>_this._imgsDivW/3){
             _this.changePage('p');
         }else if(_curOffsetX<-_this._imgsDivW/3){
             _this.changePage('n');
         }else{
-            // _aryImages[_curIndex].style.left = (_this._imgsDivW - _aryImages[_curIndex].width)/2 + 'px';
-            // _aryImages[_pIndex].style.right = _this._imgContainerW + 'px';
-            // _aryImages[_nIndex].style.left = _this._imgContainerW + 'px';
             _this.__ReInitImageControlPosition();
         }
     }
 
     //https://developer.mozilla.org/zh-CN/docs/Web/Events
     
+    _this.videoSettings = {video:{/*width:{ideal:2048},height:{ideal:2048},*/facingMode:{ideal:"environment"}}};
+
+    // 操做数组：记录操作方法
+    _this.stack = [];
+    _this.curStep = -1;
+
+    var cfg = {};
+    cfg.viewer = _this;
+    cfg.videoSettings = _this.videoSettings;
+    cfg.container = _this._imgContainer;
+
+    _this.VideoViewer = new VideoViewer(cfg);
+
+    _this.ImageAreaSelector = new ImageAreaSelector(cfg);
+
+    // 设置  ImageViewer 里的元素宽高
+    _this.__Init();
+}
+
+ImageViewer.prototype.beforeAddImgFromFileChooseWindow = null;
+ImageViewer.prototype.afterAddImgFromFileChooseWindow = null;
+
+ImageViewer.prototype.beforeAddImgFromDropFile = null;
+ImageViewer.prototype.afterAddImgFromDropFile = null;
+
+ImageViewer.prototype.__Init = function () {
+    var _this = this;
+
+    _this._imageViewerW = lib.getElDimensions(_this._imageViewer).clientWidth;
+    _this._imageViewerH = lib.getElDimensions(_this._imageViewer).clientHeight;
+
+    _this._imgContainerW = lib.getElDimensions(_this._imgContainer).clientWidth;
+    _this._imgContainerH = lib.getElDimensions(_this._imgContainer).clientHeight;
+
+    _this._imgsDivW = lib.getElDimensions(_this._imgsDiv).clientWidth;
+    _this._imgsDivH = lib.getElDimensions(_this._imgsDiv).clientHeight;
+
+    _this._thumbnailContainerW = lib.getElDimensions(_this._thumbnailContainer).clientWidth;
+    _this._thumbnailContainerH = lib.getElDimensions(_this._thumbnailContainer).clientHeight;
+    //_this._thumbnailContainerH = _this._imageViewerH*0.2;
+
+    // Thumbnails 中每行的控件数
+    _this.thumbnailImagesPerRow = Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH)>2?Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH):3;
+
+    _this.divThumbnail.style.height = _this._thumbnailContainerH + 'px';
 }
 
 ImageViewer.prototype.adaptiveLayout = function () {
     var _this = this;
-    this._imgsDivW = lib.getElDimensions(this._imgsDiv).clientWidth;
-    this._imgsDivH = lib.getElDimensions(this._imgsDiv).clientHeight;
 
-    this._thumbnailContainerW = lib.getElDimensions(this._thumbnailContainer).clientWidth;
-    this._thumbnailContainerH = lib.getElDimensions(this._thumbnailContainer).clientHeight;
+    _this.__Init();
+
+    // 重置 ImageControl 控件的宽高和位置
+    var _aryImgs = _this.aryImages;
+    for(var i=0;i<_aryImgs.length;i++){
+        var tempW = _aryImgs[i].controlWidth,
+            tempH = _aryImgs[i].controlHeight;
+        if(tempW < _this._imgsDivW && tempH < _this._imgsDivH){
+            _aryImgs[i].ChangeControlSize(tempW,tempH);
+        }else{
+            _aryImgs[i].ChangeControlSize(_this._imgsDivW,_this._imgsDivH);
+        }
+    }
+
+    // 重置 ThumbnailControl 控件的宽高和位置
+    _this.__ReInitThumbnailControlPosition();
+
+    // 重置 canvas 控件的宽高和位置
+    _this.__attachImgToCanvas();
+
+    return true;
 }
 
-ImageViewer.prototype.LoadImage = function (url) {
+ImageViewer.prototype.LoadImage = function (imgData) {
+    var _this = this;
+    if(_this.mode != 'view'){ 
+        _this.errorString = "LoadImage(): The function is only valid in 'view' mode.";
+        return false;
+    }
+
+    if(imgData instanceof Blob || imgData instanceof HTMLCanvasElement || typeof imgData == "string" || imgData instanceof String || imgData instanceof HTMLImageElement){
+        lib.getBlobFromAnyImgData(imgData, function(blob){
+            _this.LoadImageInner(blob);
+        });
+    }else if(imgData instanceof Array || imgData instanceof FileList){
+        for(var i = 0; i < imgData.length; ++i){
+            _this.LoadImage(imgData[i]);
+        }
+        return;
+    }else{
+        _this.errorString = "addImage(imgData): Type of 'imgData' should be 'Blob', 'HTMLCanvasElement', 'HTMLImageElement', 'String(url)', 'Array(a array of source)', 'FileList'.";
+        return false;
+    }
+}
+
+ImageViewer.prototype.LoadImageInner = function (url) {
     var _this = this, cfg = {};
     cfg.viewer = _this;
     cfg.imageViewerW = _this._imageViewerW;
@@ -240,6 +285,38 @@ ImageViewer.prototype.LoadImage = function (url) {
     return true;
 }
 
+ImageViewer.prototype.GetBackgroundColor = function (v) {
+    return this.BackgroundColor;
+};
+
+ImageViewer.prototype.SetBackgroundColor = function (v) {
+    var _this = this;
+    _this.BackgroundColor = v;
+    
+    if (_this._imgContainer)
+        _this._imgContainer.style.backgroundColor = v;
+
+    return true;
+};
+
+ImageViewer.prototype.GetThumbnaiBackgroundColor = function (v) {
+    return this.ThumbnailBackgroundColor;
+};
+
+ImageViewer.prototype.SetThumbnailBackgroundColor = function (v) {
+    var _this = this;
+    _this.ThumbnailBackgroundColor = v;
+    
+    if(_this._thumbnailContainer) 
+        _this._thumbnailContainer.style.backgroundColor = v;
+    
+    for(var i=0;i<_this.aryThumbnailImages.length;i++){
+        _this.aryThumbnailImages[i].SetBackgroundColor(_this.ThumbnailBackgroundColor);
+    }
+
+    return true;
+};
+
 ImageViewer.prototype.GetThumbnailImageMargin = function () {
     var _this = this;
     return _this.ThumbnailImageMargin;
@@ -257,15 +334,6 @@ ImageViewer.prototype.SetThumbnailImageMargin = function (v) {
         return true;
     }
 };
-
-ImageViewer.prototype.LoadImageWithBlob = function (url) {
-    var _this = this;
-    lib.getBlobFromAnyImgData(url, function(blob){
-        _this.LoadImage(blob);
-    });
-
-    return true;
-}
 
 ImageViewer.prototype.showImage = function (index) {
     var _this = this;
@@ -408,38 +476,133 @@ ImageViewer.prototype.download = function(filename, index){
 };
 
 ImageViewer.prototype.showFileChooseWindow = function(){
-    this._defaultFileInput.click();
+    var _this = this;
+    if(_this.mode != 'view'){ 
+        _this.errorString = "The function is only valid in 'view' mode.";
+        console.log(_this.errorString);
+        return false;
+    }
+
+    _this._defaultFileInput.click();
     return true;
 };
 
-ImageViewer.prototype._addFilesFromLocal = function (files) {
+ImageViewer.prototype.enterEdit = function(){
     var _this = this;
-    if(files instanceof Array || files instanceof FileList){
-        for(var i = 0; i < files.length; i++){
-            _this._addFilesFromLocal(files[i]);
-        }
-    }else{
-        var reader = new FileReader();
-        reader.onload = function(){
-            _this.LoadImageWithBlob(reader.result);
-        };
-        reader.readAsDataURL(files);
+    if(_this.mode != 'view'){
+        _this.errorString = "enterEdit(): The function is invalid in current mode.";
+        console.log(_this.errorString);
+        return false;
+    }else if(_this.curIndex < 0){
+        _this.errorString = "enterEdit(): There is no image in the instance.";
+        console.log(_this.errorString);
+        return false;
     }
+    _this.mode = 'edit';
+    _this.__attachImgToCanvas();
+    _this.ImageAreaSelector.showCropRect();
+    _this.__pushStack('enterEdit');
+};
+
+ImageViewer.prototype.__pushStack = function(funName){
+    var _this = this;
+    var _curStack = {
+        fun: funName,
+        crop: _this.ImageAreaSelector.cropArea,
+        transform: $(_this._canvas).getTransform(),
+        srcBlob: _this.aryImages[_this.curIndex].imageUrl
+    };
+
+    _this.stack.push(_curStack);
+    _this.curStep++;
+    return true;
 }
 
-ImageViewer.prototype._addImgToContainer = function (objImageControl) {
+ImageViewer.prototype.cancelEdit = function(){
     var _this = this;
 
-    _this._imgsDiv.appendChild(objImageControl);
+    if(_this.mode == 'view'){ return false; }
+    _this.mode = 'view';
+
+    _this._canvas.style.display = 'none';
+    _this.showImage(_this.curIndex);
+
+    _this.ImageAreaSelector.hideCropRect();
+
+    return true;
+};
+
+ImageViewer.prototype.rotateLeft = function(){
+    var _this = this;
+    if(_this.mode != 'edit'){ return false; }
+
+    var transformOri = $(_this._canvas).getTransform();
+    var transformNew = kUtil.Matrix.dot(new kUtil.Matrix(0,-1,1,0,0,0), transformOri);
+    $(_this._canvas).setTransform(transformNew);
+    _this.__pushStack('rotateLeft');
+
+    return true;
+};
+
+ImageViewer.prototype.rotateRight = function(){
+    var _this = this;
+    if(_this.mode != 'edit'){ return false; }
+    
+    var transformOri = $(_this._canvas).getTransform();
+    var transformNew = kUtil.Matrix.dot(new kUtil.Matrix(0,1,-1,0,0,0), transformOri);
+    $(_this._canvas).setTransform(transformNew);
+    _this.__pushStack('rotateRight');
+
+    return true;
+};
+
+ImageViewer.prototype.__attachImgToCanvas = function(){
+    var _this = this;
+    if(_this.mode != 'edit') return;
+
+    var curImg = _this.aryImages[_this.curIndex];
+    curImg.SetVisible(false);
+    
+    var canvasAspectRatio = _this._imgsDivW/_this._imgsDivH;
+	var imageAspectRatio = curImg._origImageWidth/curImg._origImageHeight;
+	if(canvasAspectRatio>imageAspectRatio){
+		curImg.drawArea.height = _this._imgsDivH;
+		curImg.drawArea.width = imageAspectRatio*_this._imgsDivH;
+
+		curImg.drawArea.x = Math.floor((_this._imgsDivW-curImg.drawArea.width)/2);
+		curImg.drawArea.y = 0;
+	}else{
+		curImg.drawArea.width = _this._imgsDivW;
+		curImg.drawArea.height = curImg.drawArea.width/imageAspectRatio;
+
+		curImg.drawArea.x = 0;
+		curImg.drawArea.y = Math.floor((_this._imgsDivH-curImg.drawArea.height)/2);
+	}
+
+    _this._canvas.style.display = '';
+    _this._canvas.style.left = curImg.drawArea.x + 'px';
+    _this._canvas.style.top = curImg.drawArea.y + 'px';
+    _this._canvas.setAttribute("width",curImg.drawArea.width);
+    _this._canvas.setAttribute("height",curImg.drawArea.height);
+
+    var ctx = _this._canvas.getContext("2d");
+    ctx.clearRect(0, 0, curImg.drawArea.width, curImg.drawArea.height);
+    ctx.drawImage(curImg.objImage, 0, 0, curImg.drawArea.width, curImg.drawArea.height);
+}
+
+ImageViewer.prototype._addImgToContainer = function (objImg) {
+    var _this = this;
+
+    _this._imgsDiv.appendChild(objImg);
 
     _this.__ReInitImageControlPosition();
     return true;
 }
 
-ImageViewer.prototype._addImgToThumbnail = function (objThumbnailControl) {
+ImageViewer.prototype._addImgToThumbnail = function (objThumb) {
     var _this = this;
 
-    _this.divThumbnail.appendChild(objThumbnailControl);
+    _this.divThumbnail.appendChild(objThumb);
 
     _this.__ReInitThumbnailControlPosition();
     _this.__recalculateDivThumbnailSize();
@@ -450,7 +613,16 @@ ImageViewer.prototype._addImgToThumbnail = function (objThumbnailControl) {
 ImageViewer.prototype.__ResetSelection = function () {
     var _this = this, i = 0;
 
-    // Update selected image in Thumbnail
+    // 更新 imagControl 的的选择状态
+    for (i = 0; i < _this.aryImages.length; i++) {
+        var imgControl = _this.aryImages[i];
+        if (imgControl.cIndex != _this.curIndex)
+        imgControl.SetVisible(false);
+        else if (imgControl.cIndex == _this.curIndex)
+        imgControl.SetVisible(true);
+    }
+
+    // 更新 thumbnail 的选择状态
     for (i = 0; i < _this.aryThumbnailImages.length; i++) {
         var thumbControl = _this.aryThumbnailImages[i];
         if (thumbControl.bVisible) {
@@ -536,11 +708,15 @@ ImageViewer.prototype.__InitThumbnailControlsSize = function () {
     var iTotalWidth = _this._thumbnailContainerW - _this.ThumbnailImageMargin,
         iTotalHeight = _this._thumbnailContainerH - _this.ThumbnailImageMargin;
 
-    _this.ThumbnailControlW = parseInt(iTotalWidth / _this.thumbnailImagesPerRow - _this.ThumbnailImageMargin);
-    _this.ThumbnailControlH = parseInt(iTotalHeight - _this.ThumbnailImageMargin);
+    _this.ThumbnailControlW = iTotalWidth / _this.thumbnailImagesPerRow - _this.ThumbnailImageMargin;
+    _this.ThumbnailControlH = iTotalHeight - _this.ThumbnailImageMargin;
 
 };
 
+ImageViewer.prototype.showVideo = function(){
+    this.VideoViewer.showVideo();
+    return true;
+};
 
 ImageViewer.prototype.onNumChange = null;
 ImageViewer.prototype._updateNumUI = function(){

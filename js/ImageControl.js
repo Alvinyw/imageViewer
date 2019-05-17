@@ -5,11 +5,15 @@ function ImageControl(cfg) {
 	_this.containerWidth = 0;
 	_this.containerHeight = 0;
 
+	// ImageControl 的宽高
+	_this.controlWidth = 0;
+	_this.controlHeight = 0;
+
 	// ImageControl 的原始宽高
 	_this._origImageWidth = -1;
 	_this._origImageHeight = -1;
 
-	// ImageControl 实际占用的宽/高 包括滚动条
+	// ImageControl 里 image 实际占用的宽/高
 	_this._width = 0;
 	_this._height = 0;
 
@@ -27,18 +31,36 @@ function ImageControl(cfg) {
 
 	_this.viewer = null;
 
+	// imageControl 进入 canvas 的画布信息
+	_this.drawArea = {
+		width: _this.containerWidth,
+		height: _this.containerHeight,
+		x: 0,
+		y: 0
+	};
+
+	// imageControl 的裁切信息
+	_this.crop = {
+		left: 0,
+		top: 0,
+		width: 1,
+		height: 1
+	};
+
+	// imageControl 的旋转信息
+	_this.transform = new kUtil.Matrix(1,0,0,1,0,0);
+
 	// 初始化 ImageControl
 	_this.__init(cfg);
 }
 
-// Method
 // 初始化
 ImageControl.prototype.__init = function (cfg) {
 	var _this = this;
 
 	_this.viewer = cfg.viewer;
-	_this.containerWidth = cfg.imgContainerW;
-	_this.containerHeight = cfg.imgContainerH;
+	_this.controlWidth = _this.containerWidth = cfg.imgContainerW;
+    _this.controlHeight = _this.containerHeight = cfg.imgContainerH;
 	_this.imageUrl = cfg.imageUrl;
 	_this.cIndex = cfg.index;
 
@@ -47,6 +69,8 @@ ImageControl.prototype.__init = function (cfg) {
 	_this.divOut.style.position = 'absolute';
 	_this.divOut.style.top = _this.Top + 'px';
 	_this.divOut.style.left = _this.Left + 'px';
+	_this.divOut.style.width = _this.controlWidth + 'px';
+	_this.divOut.style.height = _this.controlHeight + 'px';
 
 	_this.__getImageByUrl();
 };
@@ -54,10 +78,15 @@ ImageControl.prototype.__init = function (cfg) {
 ImageControl.prototype.SetVisible = function (bShow) {
 	var _this = this;
 
+	if (_this.cIndex == -1) {
+		return;
+	}
+
 	_this.bVisible = bShow;
-	if (bShow) {
+
+	if(_this.bVisible){
 		_this.divOut.style.display = '';
-	} else {
+	}else{
 		_this.divOut.style.display = 'none';
 	}
 
@@ -67,8 +96,19 @@ ImageControl.prototype.SetVisible = function (bShow) {
 ImageControl.prototype.ChangeControlSize = function (width, height) {
 	var _this = this;
 
-	_this.containerWidth = width;
-	_this.containerWidth = height;
+	_this.containerWidth = _this.viewer._imgsDivW;
+	_this.containerHeight = _this.viewer._imgsDivH;
+	
+	_this.controlWidth = width;
+	_this.controlHeight = height;
+	_this.divOut.style.width = _this.controlWidth + 'px';
+	_this.divOut.style.height = _this.controlHeight + 'px';
+
+	_this.Left = (_this.containerWidth - _this.controlWidth)/2;
+	_this.Top = (_this.containerHeight - _this.controlHeight)/2;
+
+	if(_this.bVisible)
+		_this.SetLocation(_this.Left, _this.Top);
 
 	_this.Show();
 	return true;
@@ -78,13 +118,14 @@ ImageControl.prototype.ChangeControlSize = function (width, height) {
 ImageControl.prototype.SetLocation = function (x, y) {
 	var _this = this;
 	if(arguments.length == 0){
-		_this.__fitImage();
-		return;
+		_this.Left = (_this.containerWidth - _this.controlWidth)/2;
+		_this.Top = (_this.containerHeight - _this.controlHeight)/2;
 	}
 	if(arguments.length == 1){
 		_this.Left = x;
 	}
 	if(arguments.length > 1){
+		_this.Left = x;
 		_this.Top = y;
 	}
 	
@@ -118,13 +159,6 @@ ImageControl.prototype.ClearImage = function () {
 ImageControl.prototype.Show = function () {
 	var _this = this;
 
-	if (_this.bVisible) {
-		_this.divOut.style.display = 'inline-block';
-	} else {
-		_this.divOut.style.display = 'none';
-		return;
-	}
-
 	if (_this.cIndex == -1) {
 		return;
 	}
@@ -147,7 +181,6 @@ ImageControl.prototype.Refresh = function () {
 	var _this = this;
 
 	_this.__getImageByUrl();
-	_this.Show();
 
 	return true;
 };
@@ -155,32 +188,30 @@ ImageControl.prototype.Refresh = function () {
 // 计算 ImageControl 里实际显示 image 的宽高
 ImageControl.prototype.__fitImage = function () {
 	var _this = this;
-	var containerAspectRatio = _this.containerWidth/_this.containerHeight;
+	if(!_this.objImage) return;
+
+	var objImageLeft, objImageTop;
+	var containerAspectRatio = _this.controlWidth/_this.controlHeight;
 	var imageAspectRatio = _this._origImageWidth/_this._origImageHeight;
 	if(containerAspectRatio > imageAspectRatio){
-		_this._height = _this.containerHeight;
-		_this._width = imageAspectRatio*_this.containerHeight;
+		_this._height = _this.controlHeight;
+		_this._width = imageAspectRatio*_this.controlHeight;
 
-		_this.Left = Math.floor((_this.containerWidth-_this._width)/2);
-		_this.Top = 0;
+		objImageLeft = Math.floor((_this.controlWidth-_this._width)/2);
+		objImageTop = 0;
 	}else{
-		_this._width = _this.containerWidth;
-		_this._height = _this.containerWidth/imageAspectRatio;
+		_this._width = _this.controlWidth;
+		_this._height = _this.controlWidth/imageAspectRatio;
 
-		_this.Left = 0;
-		_this.Top = Math.floor((_this.containerHeight-_this._height)/2);
+		objImageLeft = 0;
+		objImageTop = Math.floor((_this.controlHeight-_this._height)/2);
 	}
 
-	// 设置 ImageControl 的宽高
-	if(_this.objImage){
-		_this.objImage.style.width = _this._width + 'px';
-		_this.objImage.style.height = _this._height + 'px';
-	}	
-
-	_this.divOut.style.width = _this._width + 'px';
-	_this.divOut.style.height = _this._height + 'px';
-
-	_this.SetLocation(_this.Left, _this.Top);
+	_this.objImage.style.position = 'absolute';
+	_this.objImage.style.left = objImageLeft + 'px';
+	_this.objImage.style.top = objImageTop + 'px';
+	_this.objImage.style.width = _this._width + 'px';
+	_this.objImage.style.height = _this._height + 'px';
 }
 
 //把图片加载到控件上

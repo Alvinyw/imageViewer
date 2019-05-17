@@ -7,12 +7,6 @@
     <title>ImageViewer</title>
     <link rel="stylesheet" type="text/css" href="css/cssResetH5.css" />
     <link rel="stylesheet" type="text/css" href="css/imageViewer.css" />
-    <script type="text/javascript" src="js/common.js"></script>
-    <script type="text/javascript" src="js/global-dom.js"></script>
-    <script type="text/javascript" src="js/ImageControl.js"></script>
-    <script type="text/javascript" src="js/ThumbnailControl.js"></script>
-    <script type="text/javascript" src="js/ImageViewer.js"></script>
-    <script type="text/javascript" src="js/opration.js"></script>
 </head>
 <body>
     <div id="main">
@@ -20,6 +14,7 @@
             <li><button onclick="fuc_LoadImage()">LoadImage</button></li>
             <li><button onclick="fuc_getCount()">getCount</button></li>
             <li><button onclick="fuc_getCurentIndex()">getCurentIndex</button></li>
+            <!--
             <li><button onclick="fuc_getImage()">getImage</button></li>
             <li><button onclick="fuc_deleteImage()">deleteImage</button></li>
             <li><button onclick="fuc_changePage('p')">previous</button></li>
@@ -27,23 +22,31 @@
             <li><button onclick="fuc_changePage('f')">front</button></li>
             <li><button onclick="fuc_changePage('l')">last</button></li>
             <li><button onclick="fuc_download()">download</button></li>
+            -->
+            <li><button onclick="fuc_showVideo()">show video</button></li>
+            <li><button onclick="fuc_enterEdit()">edit</button></li>
+            <li><button onclick="fuc_cancelEdit()">cancel</button></li>
+            <li><button onclick="fuc_rotateLeft()">RotateLeft</button></li>
+            <li><button onclick="fuc_rotateRight()">RotateRight</button></li>
         </ul>
         <div id="imageViewer"></div>
     </div>
 </body>
-<script type="text/javascript">
-var imageViewer = new ImageViewer("imageViewer");
+<script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+<script type="text/javascript" src="js/exif.js"></script>
 
-imageViewer.onNumChange = function(curIndex,imgCount){
-    var _curIndex = parseInt(curIndex)+1;
-    //console.log('curIndex '+_curIndex+' imgCount: '+imgCount);
-}
 
-window.onresize = function(){
-    var imgCount = imageViewer.getCount();
-    if(imgCount>1){
-        imageViewer.adaptiveLayout();
-    }
-};
-</script>
+<script type="text/javascript" src="js/pdf.js"></script>
+<script type="text/javascript" src="js/pdf.worker.js"></script>
+
+
+<script type="text/javascript" src="js/global-dom.js"></script>
+<script type="text/javascript" src="js/kUtil.js"></script>
+<script type="text/javascript" src="js/VideoViewer.js"></script>
+<script type="text/javascript" src="js/ImageAreaSelector.js"></script>
+<script type="text/javascript" src="js/ImageControl.js"></script>
+<script type="text/javascript" src="js/ThumbnailControl.js"></script>
+<script type="text/javascript" src="js/ImageViewer.js"></script>
+<script type="text/javascript" src="js/opration.js"></script>
 </html>

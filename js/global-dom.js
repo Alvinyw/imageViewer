@@ -88,7 +88,7 @@ lib.canvasToBlob = function(cvs, callback, mimeType, quality){
 
 lib.getBlobFromAnyImgData = function(imgData, callback){
 	if(imgData instanceof Blob){
-		callback(blob);
+		callback(imgData);
 	}else if(imgData instanceof HTMLCanvasElement){
 		lib.canvasToBlob(imgData, function(blob){
 			callback(blob);
@@ -167,22 +167,6 @@ lib.getBlobFromAnyImgData = function(imgData, callback){
 
 };
 
-// lib.getNodesFromParent = function(parent, nodeName, nodeClass){  
-//     var targetNodes = [];
-//     var allNotes = parent.children;
-//     for(var i=0;i<allNotes.length;i++){
-// 		if(allNotes[i].nodeName.toLowerCase()== nodeName && (nodeClass?lib.hasClass(allNotes[i],nodeClass):true))
-// 		{
-//             targetNodes.push(allNotes[i]);
-//         }
-// 	}
-// 	return targetNodes;
-// };
-
-// lib.removeNodeFromParent = function(parent, node){  
-// 	var _NodeIndex = parent.children.indexOf(node);
-// 	parent.removeChild(parent.children[_NodeIndex]); 
-// };
 
 lib.addEvent = function(obj,type,handle){
 	obj.addEventListener ? obj.addEventListener(type,handle,false) : obj.attachEvent("on"+type,handle);

@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<script src="js/pdf.js"></script>
+<script src="js/pdf.worker.js"></script>
+</head>
+
+<body>
+    <div id="container"></div>
+	<canvas id="pdf-canvas"></canvas>
+</body>
+<script>
+var url = 'http://localhost:82/dbrjs6.5/Documents/dbr-datasheet.pdf';
+
+// pdfjsLib.getDocument(url).then(function(pdf){
+//     for (var i = 1; i<= pdf.numPages; i++) {
+//         console.log(pdf.getPage(i));
+//     }
+//     return pdf.getPage(1);
+// }).then(function(page) {
+//     // 设置展示比例
+//     var scale = 1.5;
+//     // 获取pdf尺寸
+//     var viewport = page.getViewport(scale);
+//     // 获取需要渲染的元素
+//     var canvas = document.getElementById('pdf-canvas');
+//     var context = canvas.getContext('2d');
+//     canvas.height = viewport.height;
+//     canvas.width = viewport.width;
+    
+//     var renderContext = {
+//         canvasContext: context,
+//         viewport: viewport
+//     };
+
+//     page.render(renderContext);
+// });
+
+
+var container, pageDiv;
+
+function getPDF(url) {
+    pdfjsLib.getDocument(url).then((pdf) => {
+        pdfDoc = pdf;
+        container = document.getElementById('container');
+        for (var i = 1; i<= pdf.numPages; i++) {
+            //renderPDF(i);
+            pdf.getPage(i).then((page) => {
+                var scale = 1.5;
+                var viewport = page.getViewport(scale);
+                pageDiv = document.createElement('div');
+                pageDiv.setAttribute('id', 'page-' + (page.pageIndex + 1));
+                pageDiv.setAttribute('style', 'position: relative');
+                container.appendChild(pageDiv);
+                var canvas = document.createElement('canvas');
+                pageDiv.appendChild(canvas);
+                var context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                var renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                page.render(renderContext);
+            });
+        }
+    })
+}
+
+getPDF('http://localhost:82/dbrjs6.5/Documents/dbr-datasheet.pdf');
+</script>
+</html>
