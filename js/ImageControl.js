@@ -31,25 +31,6 @@ function ImageControl(cfg) {
 
 	_this.viewer = null;
 
-	// imageControl 进入 canvas 的画布信息
-	_this.drawArea = {
-		width: _this.containerWidth,
-		height: _this.containerHeight,
-		x: 0,
-		y: 0
-	};
-
-	// imageControl 的裁切信息
-	_this.crop = {
-		left: 0,
-		top: 0,
-		width: 1,
-		height: 1
-	};
-
-	// imageControl 的旋转信息
-	_this.transform = new kUtil.Matrix(1,0,0,1,0,0);
-
 	// 初始化 ImageControl
 	_this.__init(cfg);
 }
@@ -107,7 +88,7 @@ ImageControl.prototype.ChangeControlSize = function (width, height) {
 	_this.Left = (_this.containerWidth - _this.controlWidth)/2;
 	_this.Top = (_this.containerHeight - _this.controlHeight)/2;
 
-	if(_this.bVisible)
+	if(_this.cIndex == _this.viewer.getCurentIndex())
 		_this.SetLocation(_this.Left, _this.Top);
 
 	_this.Show();

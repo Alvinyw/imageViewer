@@ -76,6 +76,7 @@
     
     function fuc_touchstart(event){
         var ev = event || window.event;
+        if(_this.mode != 'view') return;
 		lib.stopDefault(ev);
 
         lib.addEvent(_this._imgContainer,"mousemove", fuc_touchmove);
@@ -102,6 +103,7 @@
 
     function fuc_touchmove(event){
         var ev = event || window.event;
+        if(_this.mode != 'view') return;
 		lib.stopDefault(ev);
 
         if(_this.getCount()<2){return false;}
@@ -130,6 +132,7 @@
 
     function fuc_touchend(event){
         var ev = event || window.event;
+        if(_this.mode != 'view') return;
 		lib.stopDefault(ev);
         
         if(_this.getCount()<1){return false;}
@@ -166,13 +169,20 @@
     _this.stack = [];
     _this.curStep = -1;
 
+    // Canvas 的宽高和位置信息
+    _this._canvasArea = {
+        width: 0,
+        height: 0,
+        left: 0,
+        top: 0
+    };
+
     var cfg = {};
     cfg.viewer = _this;
     cfg.videoSettings = _this.videoSettings;
     cfg.container = _this._imgContainer;
 
     _this.VideoViewer = new VideoViewer(cfg);
-
     _this.ImageAreaSelector = new ImageAreaSelector(cfg);
 
     // 设置  ImageViewer 里的元素宽高
@@ -198,8 +208,8 @@ ImageViewer.prototype.__Init = function () {
     _this._imgsDivH = lib.getElDimensions(_this._imgsDiv).clientHeight;
 
     _this._thumbnailContainerW = lib.getElDimensions(_this._thumbnailContainer).clientWidth;
-    _this._thumbnailContainerH = lib.getElDimensions(_this._thumbnailContainer).clientHeight;
-    //_this._thumbnailContainerH = _this._imageViewerH*0.2;
+    //_this._thumbnailContainerH = lib.getElDimensions(_this._thumbnailContainer).clientHeight;
+    _this._thumbnailContainerH = _this._imageViewerH*0.2;
 
     // Thumbnails 中每行的控件数
     _this.thumbnailImagesPerRow = Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH)>2?Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH):3;
@@ -228,7 +238,7 @@ ImageViewer.prototype.adaptiveLayout = function () {
     _this.__ReInitThumbnailControlPosition();
 
     // 重置 canvas 控件的宽高和位置
-    _this.__attachImgToCanvas();
+    _this.__updateCanvasUI();
 
     return true;
 }
@@ -499,9 +509,9 @@ ImageViewer.prototype.enterEdit = function(){
         return false;
     }
     _this.mode = 'edit';
-    _this.__attachImgToCanvas();
-    _this.ImageAreaSelector.showCropRect();
     _this.__pushStack('enterEdit');
+
+    _this.__updateCanvasUI();
 };
 
 ImageViewer.prototype.__pushStack = function(funName){
@@ -524,11 +534,9 @@ ImageViewer.prototype.cancelEdit = function(){
     if(_this.mode == 'view'){ return false; }
     _this.mode = 'view';
 
-    _this._canvas.style.display = 'none';
     _this.showImage(_this.curIndex);
 
-    _this.ImageAreaSelector.hideCropRect();
-
+    _this.__updateCanvasUI();
     return true;
 };
 
@@ -541,6 +549,7 @@ ImageViewer.prototype.rotateLeft = function(){
     $(_this._canvas).setTransform(transformNew);
     _this.__pushStack('rotateLeft');
 
+    _this.__updateCanvasUI();
     return true;
 };
 
@@ -553,10 +562,40 @@ ImageViewer.prototype.rotateRight = function(){
     $(_this._canvas).setTransform(transformNew);
     _this.__pushStack('rotateRight');
 
+    _this.__updateCanvasUI();
     return true;
 };
 
-ImageViewer.prototype.__attachImgToCanvas = function(){
+ImageViewer.prototype.__updateCanvasUI = function(){
+    var _this = this;
+
+    if(_this.mode == 'edit'){
+        _this._canvas.style.display = '';
+
+        var _curStack = _this.stack[_this.curStep];
+        // 判断旋转了几次：0(奇数次) / 1(偶数次)
+        var rotateTime = Math.abs(_curStack.transform.a);
+
+        _this.__attachImgToCanvas(rotateTime);
+        _this.ImageAreaSelector.showCropRect(rotateTime);
+    }else if(_this.mode == 'view'){
+        _this._canvas.style.display = 'none';
+        _this.stack = [];
+        _this.curStep = -1;
+        _this._canvasArea = {
+            width: 0,
+            height: 0,
+            left: 0,
+            top: 0
+        };
+        var transformNew = new kUtil.Matrix(1,0,0,1,0,0);
+        $(_this._canvas).setTransform(transformNew);
+        _this.ImageAreaSelector.hideCropRect();
+    }
+    
+}
+
+ImageViewer.prototype.__attachImgToCanvas = function(rotateTime){
     var _this = this;
     if(_this.mode != 'edit') return;
 
@@ -564,30 +603,40 @@ ImageViewer.prototype.__attachImgToCanvas = function(){
     curImg.SetVisible(false);
     
     var canvasAspectRatio = _this._imgsDivW/_this._imgsDivH;
-	var imageAspectRatio = curImg._origImageWidth/curImg._origImageHeight;
+    
+    if(rotateTime == 1){
+        // 旋转偶数次
+        var imageAspectRatio = curImg._origImageWidth/curImg._origImageHeight;
+    }else{
+        // 旋转奇数次
+        var imageAspectRatio = curImg._origImageHeight/curImg._origImageWidth;
+    }
+	
 	if(canvasAspectRatio>imageAspectRatio){
-		curImg.drawArea.height = _this._imgsDivH;
-		curImg.drawArea.width = imageAspectRatio*_this._imgsDivH;
-
-		curImg.drawArea.x = Math.floor((_this._imgsDivW-curImg.drawArea.width)/2);
-		curImg.drawArea.y = 0;
+		_this._canvasArea.height = _this._imgsDivH;
+		_this._canvasArea.width = imageAspectRatio*_this._imgsDivH;
 	}else{
-		curImg.drawArea.width = _this._imgsDivW;
-		curImg.drawArea.height = curImg.drawArea.width/imageAspectRatio;
-
-		curImg.drawArea.x = 0;
-		curImg.drawArea.y = Math.floor((_this._imgsDivH-curImg.drawArea.height)/2);
+		_this._canvasArea.width = _this._imgsDivW;
+		_this._canvasArea.height = _this._canvasArea.width/imageAspectRatio;
 	}
 
-    _this._canvas.style.display = '';
-    _this._canvas.style.left = curImg.drawArea.x + 'px';
-    _this._canvas.style.top = curImg.drawArea.y + 'px';
-    _this._canvas.setAttribute("width",curImg.drawArea.width);
-    _this._canvas.setAttribute("height",curImg.drawArea.height);
+    if(rotateTime == 0){
+        var tempW = _this._canvasArea.width;
+        _this._canvasArea.width = _this._canvasArea.height;
+        _this._canvasArea.height = tempW;
+    }
+
+    _this._canvasArea.left = Math.floor((_this._imgsDivW-_this._canvasArea.width)/2);
+    _this._canvasArea.top = Math.floor((_this._imgsDivH-_this._canvasArea.height)/2);
+
+    _this._canvas.style.left = _this._canvasArea.left + 'px';
+    _this._canvas.style.top = _this._canvasArea.top + 'px';
+    _this._canvas.setAttribute("width",_this._canvasArea.width);
+    _this._canvas.setAttribute("height",_this._canvasArea.height);
 
     var ctx = _this._canvas.getContext("2d");
-    ctx.clearRect(0, 0, curImg.drawArea.width, curImg.drawArea.height);
-    ctx.drawImage(curImg.objImage, 0, 0, curImg.drawArea.width, curImg.drawArea.height);
+    ctx.clearRect(0, 0, _this._canvasArea.width, _this._canvasArea.height);
+    ctx.drawImage(_this.aryImages[_this.curIndex].objImage, 0, 0, _this._canvasArea.width, _this._canvasArea.height);
 }
 
 ImageViewer.prototype._addImgToContainer = function (objImg) {
@@ -612,15 +661,6 @@ ImageViewer.prototype._addImgToThumbnail = function (objThumb) {
 
 ImageViewer.prototype.__ResetSelection = function () {
     var _this = this, i = 0;
-
-    // 更新 imagControl 的的选择状态
-    for (i = 0; i < _this.aryImages.length; i++) {
-        var imgControl = _this.aryImages[i];
-        if (imgControl.cIndex != _this.curIndex)
-        imgControl.SetVisible(false);
-        else if (imgControl.cIndex == _this.curIndex)
-        imgControl.SetVisible(true);
-    }
 
     // 更新 thumbnail 的选择状态
     for (i = 0; i < _this.aryThumbnailImages.length; i++) {

@@ -67,7 +67,7 @@
     _this.top = 0;
     _this.left = 0;
 
-    // 控件开始拖拽的位置信息
+    // 鼠标按下时控件的初始信息
     _this._startPos = {
         targetNode: -1, // 控件当前拖拽的边/角：边 -（1：左，2：上，3：右，4：下），角 - （5：左上，6：右上，7：右下，8：左下）
         startX: 0, // 鼠标落点位置
@@ -108,39 +108,27 @@ ImageAreaSelector.prototype.__Init = function (){
         lib.addEvent(_this.container,"mousemove", fuc_touchmove);
         lib.addEvent(_this.container,"mouseleave", fuc_touchend);
         lib.addEvent(_this.container,"mouseup", fuc_touchend);
-        for(var i=0;i<4;i++){
-            //lib.addEvent(_this.kPainterCorners[i],"mousemove", fuc_touchmove);
-            //lib.addEvent(_this.kPainterCorners[i],"mouseleave", fuc_touchend);
-    
-           // lib.addEvent(_this.kPainterEdges[i],"mousemove", fuc_touchmove);
-            //lib.addEvent(_this.kPainterEdges[i],"mouseleave", fuc_touchend);
-        }
 
         var touches = ev.changedTouches;
 
+        var curX,curY;
         if(touches){
             //Multi-contact is prohibited
             if(touches.length!=1){return false;}
-
-            _this._startPos = {
-                targetNode: parseInt(this.getAttribute("data-orient")),
-                startX: touches[0].pageX,
-                startY: touches[0].pageY,
-                width: _this.cropArea.width,
-                height: _this.cropArea.height,
-                left: _this.cropArea.x,
-                top: _this.cropArea.y
-            }
+            curX = touches[0].pageX;
+            curY = touches[0].pageY;
         }else{
-            _this._startPos = {
-                targetNode: parseInt(this.getAttribute("data-orient")),
-                startX: ev.clientX,
-                startY: ev.clientY,
-                width: _this.cropArea.width,
-                height: _this.cropArea.height,
-                left: _this.cropArea.x,
-                top: _this.cropArea.y
-            }
+            curX = ev.clientX;
+            curY = ev.clientY;
+        }
+        _this._startPos = {
+            targetNode: parseInt(this.getAttribute("data-orient")),
+            startX: curX,
+            startY: curY,
+            width: _this.cropArea.width,
+            height: _this.cropArea.height,
+            left: _this.cropArea.x,
+            top: _this.cropArea.y
         }
 
     } 
@@ -160,43 +148,72 @@ ImageAreaSelector.prototype.__Init = function (){
                 _curOffsetY = ev.clientY - sp.startY;
         }
 
+        // 控件的实时位置和大小信息
+        var curW,curH,curL,curT;
+
         switch(sp.targetNode)
         {
         case 1:
             // 拖拽 左侧边框
-            _this.__setCropArea(sp.width-_curOffsetX, sp.height, sp.left+_curOffsetX, sp.top);
+            curW = (sp.width-_curOffsetX)>(sp.left + sp.width)?(sp.left + sp.width):(sp.width-_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width-_curOffsetX);
+            curH = sp.height;
+            curL = sp.left + sp.width - curW;
+            curT = sp.top;
             break;
         case 2:
             // 拖拽 上侧边框
-            _this.__setCropArea(sp.width, sp.height-_curOffsetY, sp.left, sp.top+_curOffsetY);
+            curW = sp.width;
+            curH = (sp.height-_curOffsetY)>(sp.top + sp.height)?(sp.top + sp.height):(sp.height-_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height-_curOffsetY);
+            curL = sp.left;
+            curT = sp.top + sp.height - curH;
             break;
         case 3:
             // 拖拽 右侧边框
-            _this.__setCropArea(sp.width+_curOffsetX, sp.height, sp.left, sp.top);
+            curW = (sp.width+_curOffsetX)>(_this.maxWidth-sp.left)?(_this.maxWidth-sp.left):(sp.width+_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width+_curOffsetX);
+            curH = sp.height;
+            curL = sp.left;
+            curT = sp.top;
             break;
         case 4:
             // 拖拽 下侧边框
-            _this.__setCropArea(sp.width, sp.height+_curOffsetY, sp.left, sp.top);
+            curW = sp.width;
+            curH = (sp.height+_curOffsetY)>(_this.maxHeight-sp.top)?(_this.maxHeight-sp.top):(sp.height+_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height+_curOffsetY);
+            curL = sp.left;
+            curT = sp.top;
             break;
         case 5:
             // 拖拽 左上顶点
-            _this.__setCropArea(sp.width-_curOffsetX, sp.height-_curOffsetY, sp.left+_curOffsetX, sp.top+_curOffsetY);
+            curW = (sp.width-_curOffsetX)>(sp.left + sp.width)?(sp.left + sp.width):(sp.width-_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width-_curOffsetX);
+            curH = (sp.height-_curOffsetY)>(sp.top + sp.height)?(sp.top + sp.height):(sp.height-_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height-_curOffsetY);
+            curL = sp.left + sp.width - curW;
+            curT = sp.top + sp.height - curH;
             break;
         case 6:
             // 拖拽 右上顶点
-            _this.__setCropArea(sp.width+_curOffsetX, sp.height-_curOffsetY, sp.left, sp.top+_curOffsetY);
+            curW = (sp.width+_curOffsetX)>(_this.maxWidth-sp.left)?(_this.maxWidth-sp.left):(sp.width+_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width+_curOffsetX);
+            curH = (sp.height-_curOffsetY)>(sp.top + sp.height)?(sp.top + sp.height):(sp.height-_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height-_curOffsetY);
+            curL = sp.left;
+            curT = sp.top + sp.height - curH;
             break;
         case 7:
             // 拖拽 右下顶点
-            _this.__setCropArea(sp.width+_curOffsetX, sp.height+_curOffsetY, sp.left, sp.top);
+            curW = (sp.width+_curOffsetX)>(_this.maxWidth-sp.left)?(_this.maxWidth-sp.left):(sp.width+_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width+_curOffsetX);
+            curH = (sp.height+_curOffsetY)>(_this.maxHeight-sp.top)?(_this.maxHeight-sp.top):(sp.height+_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height+_curOffsetY);
+            curL = sp.left;
+            curT = sp.top;
             break;
         case 8:
             // 拖拽 左下顶点
-            _this.__setCropArea(sp.width-_curOffsetX, sp.height+_curOffsetY, sp.left+_curOffsetX, sp.top);
+            curW = (sp.width-_curOffsetX)>(sp.left + sp.width)?(sp.left + sp.width):(sp.width-_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width-_curOffsetX);
+            curH = (sp.height+_curOffsetY)>(_this.maxHeight-sp.top)?(_this.maxHeight-sp.top):(sp.height+_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height+_curOffsetY);
+            curL = sp.left + sp.width - curW;
+            curT = sp.top;
             break;
         default:
             return;
         }
+
+        _this.__setCropArea(curW, curH, curL, curT);
         
     } 
 
@@ -225,17 +242,23 @@ ImageAreaSelector.prototype.setVisible = function (bVisible) {
     return true;
 }
 
-ImageAreaSelector.prototype.showCropRect = function () {
+ImageAreaSelector.prototype.showCropRect = function (rotateTime) {
     var _this = this;
     if(_this.viewer.mode != 'edit') return;
     _this.isCropRectShowing = true;
     _this.setVisible(true);
 
-    var curImg = _this.viewer.aryImages[_this.viewer.getCurentIndex()];
-    _this.maxWidth = curImg.drawArea.width;
-    _this.maxHeight = curImg.drawArea.height;
-    _this.minLeft = curImg.drawArea.x;
-    _this.minTop = curImg.drawArea.y;
+    if(rotateTime == 1){
+        // rotate 次数为偶数
+        _this.maxWidth = _this.viewer._canvasArea.width;
+        _this.maxHeight = _this.viewer._canvasArea.height;
+    }else{
+        // rotate 次数为奇数
+        _this.maxWidth = _this.viewer._canvasArea.height;
+        _this.maxHeight = _this.viewer._canvasArea.width;
+    }
+    _this.minLeft = (_this.viewer._imgContainerW -_this.maxWidth)/2;
+    _this.minTop = (_this.viewer._imgContainerH -_this.maxHeight)/2;
 
     _this.__setCropArea(_this.maxWidth, _this.maxHeight, 0, 0);
     return true;
@@ -244,10 +267,10 @@ ImageAreaSelector.prototype.showCropRect = function () {
 ImageAreaSelector.prototype.__setCropArea = function (w,h,x,y) {
     var _this = this;
 
-    w = (w<_this.minWidth)?_this.minWidth:(w>(_this.maxWidth))?(_this.maxWidth):w;
-    h = (h<_this.minHeight)?_this.minHeight:(h>(_this.maxHeight))?(_this.maxHeight):h;
-    x = (x>(_this.maxWidth -_this.minWidth))?(_this.maxWidth -_this.minWidth):x<0?0:x;
-    y = (y>(_this.maxHeight -_this.minHeight))?(_this.maxHeight -_this.minHeight):y<0?0:y;
+    // w = (w<_this.minWidth)?_this.minWidth:(w>(_this.maxWidth))?(_this.maxWidth):w;
+    // h = (h<_this.minHeight)?_this.minHeight:(h>(_this.maxHeight))?(_this.maxHeight):h;
+    // x = (x>(_this.maxWidth -_this.minWidth))?(_this.maxWidth -_this.minWidth):x<0?0:x;
+    // y = (y>(_this.maxHeight -_this.minHeight))?(_this.maxHeight -_this.minHeight):y<0?0:y;
 
     _this.cropArea.width = w;
     _this.cropArea.height = h;
