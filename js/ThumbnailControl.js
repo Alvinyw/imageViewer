@@ -90,7 +90,7 @@ ThumbnailControl.prototype.__init = function (cfg) {
 	_this.thumbOut.appendChild(_this.thumbCanvas);
 
 	lib.addEvent(_this.thumbOut,"click", function(){
-		_this.viewer.showImage(_this.cIndex);
+		_this.viewer.ShowImage(_this.cIndex);
 	});
 
 	lib.addEvent(_this.thumbOut,"mouseenter", function(){
@@ -310,8 +310,8 @@ ThumbnailControl.prototype.Destroy = function () {
 
 ThumbnailControl.prototype.Refresh= function () {
 	var _this = this;
-	_this.__getImageByIndex(_this.viewer.BaseUrl,_this.cIndex,_this._width,_this._height);
-	_this.Show();
+
+	_this.__getImageByUrl();
 
 	return true;
 };

@@ -39,6 +39,8 @@
     _this.container.insertAdjacentHTML('beforeEnd', containerDiv);
     _this.kPainterCroper = lib._querySelectorAll(_this.container,'div.kPainterCroper')[0];
 
+    _this.kPainterCells = lib._querySelectorAll(_this.container,'div.kPainterCells > div');
+
     // 控件的四个顶点
     _this.kPainterCorners = lib._querySelectorAll(_this.container,'div.kPainterCorners > div');
     // 控件的四条边框
@@ -67,6 +69,10 @@
     _this.top = 0;
     _this.left = 0;
 
+    // 控件的 UI 属性
+    _this.borderColor = 'red';
+    _this.backgroundColor = 'rgba(255,0,0,0.2)';
+
     // 鼠标按下时控件的初始信息
     _this._startPos = {
         targetNode: -1, // 控件当前拖拽的边/角：边 -（1：左，2：上，3：右，4：下），角 - （5：左上，6：右上，7：右下，8：左下）
@@ -78,19 +84,22 @@
         top: 0
     };
 
-    // 裁切信息
-    _this.cropArea = {
+    // 画布实时的裁切信息：相对于伸缩后的图片
+    _this.drawArea = {
 		width: 0,
 		height: 0,
 		x: 0,
 		y: 0
     };
 
+    // 实际的裁切信息：相对于原图
+    _this.cropArea = null;
+
     _this.__Init();
 
 }
 
-ImageAreaSelector.prototype.__Init = function (){
+ImageAreaSelector.prototype.__Init = function(){
     var _this = this;
 
     // 给控件四条边和四个角添加响应点击事件
@@ -125,10 +134,10 @@ ImageAreaSelector.prototype.__Init = function (){
             targetNode: parseInt(this.getAttribute("data-orient")),
             startX: curX,
             startY: curY,
-            width: _this.cropArea.width,
-            height: _this.cropArea.height,
-            left: _this.cropArea.x,
-            top: _this.cropArea.y
+            width: _this.drawArea.width,
+            height: _this.drawArea.height,
+            left: _this.drawArea.x,
+            top: _this.drawArea.y
         }
 
     } 
@@ -213,7 +222,7 @@ ImageAreaSelector.prototype.__Init = function (){
             return;
         }
 
-        _this.__setCropArea(curW, curH, curL, curT);
+        _this.__updateDrawArea(curW, curH, curL, curT);
         
     } 
 
@@ -229,7 +238,7 @@ ImageAreaSelector.prototype.__Init = function (){
     }
 }
 
-ImageAreaSelector.prototype.setVisible = function (bVisible) {
+ImageAreaSelector.prototype.SetVisible = function(bVisible){
     var _this = this;
     if(bVisible){
         _this.bVisible = true;
@@ -242,11 +251,11 @@ ImageAreaSelector.prototype.setVisible = function (bVisible) {
     return true;
 }
 
-ImageAreaSelector.prototype.showCropRect = function (rotateTime) {
+ImageAreaSelector.prototype.ShowCropRect = function(rotateTime){
     var _this = this;
     if(_this.viewer.mode != 'edit') return;
     _this.isCropRectShowing = true;
-    _this.setVisible(true);
+    _this.SetVisible(true);
 
     if(rotateTime == 1){
         // rotate 次数为偶数
@@ -260,27 +269,37 @@ ImageAreaSelector.prototype.showCropRect = function (rotateTime) {
     _this.minLeft = (_this.viewer._imgContainerW -_this.maxWidth)/2;
     _this.minTop = (_this.viewer._imgContainerH -_this.maxHeight)/2;
 
-    _this.__setCropArea(_this.maxWidth, _this.maxHeight, 0, 0);
+    _this.__updateDrawArea(_this.maxWidth, _this.maxHeight, 0, 0);
     return true;
 }
 
-ImageAreaSelector.prototype.__setCropArea = function (w,h,x,y) {
+ImageAreaSelector.prototype.__getDrawArea = function(){
     var _this = this;
-
-    // w = (w<_this.minWidth)?_this.minWidth:(w>(_this.maxWidth))?(_this.maxWidth):w;
-    // h = (h<_this.minHeight)?_this.minHeight:(h>(_this.maxHeight))?(_this.maxHeight):h;
-    // x = (x>(_this.maxWidth -_this.minWidth))?(_this.maxWidth -_this.minWidth):x<0?0:x;
-    // y = (y>(_this.maxHeight -_this.minHeight))?(_this.maxHeight -_this.minHeight):y<0?0:y;
-
-    _this.cropArea.width = w;
-    _this.cropArea.height = h;
-    _this.cropArea.x = x;
-    _this.cropArea.y = y;
-
-    _this.__updatePositionAndCropArea(w,h,x+_this.minLeft,y+_this.minTop);
+    var curDrawRect = {
+        width: _this.drawArea.width,
+		height: _this.drawArea.height,
+		x: _this.drawArea.x,
+		y: _this.drawArea.y
+    };
+    return curDrawRect;
 }
 
-ImageAreaSelector.prototype.__updatePositionAndCropArea = function (w,h,l,t) {
+ImageAreaSelector.prototype.__getCropArea = function(){
+    var _this = this;
+}
+
+ImageAreaSelector.prototype.__updateDrawArea = function(w,h,x,y) {
+    var _this = this;
+
+    _this.drawArea.width = w;
+    _this.drawArea.height = h;
+    _this.drawArea.x = x;
+    _this.drawArea.y = y;
+
+    _this.__updatePosition(w,h,x+_this.minLeft,y+_this.minTop);
+}
+
+ImageAreaSelector.prototype.__updatePosition = function(w,h,l,t) {
     var _this = this;
     _this.left = l;
     _this.top = t;
@@ -292,10 +311,10 @@ ImageAreaSelector.prototype.__updatePositionAndCropArea = function (w,h,l,t) {
     return true;
 }
 
-ImageAreaSelector.prototype.hideCropRect = function () {
+ImageAreaSelector.prototype.HideCropRect = function(){
     var _this = this;
     _this.isCropRectShowing = false;
-    _this.setVisible(false);
+    _this.SetVisible(false);
 
     return true;
 }

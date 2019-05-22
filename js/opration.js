@@ -6,9 +6,9 @@ imageViewer.onNumChange = function(curIndex,imgCount){
 }
 
 window.onresize = function(){
-    var imgCount = imageViewer.getCount();
+    var imgCount = imageViewer.GetCount();
     if(imgCount>0){
-        imageViewer.adaptiveLayout();
+        imageViewer.AdaptiveLayout();
     }
 };
 
@@ -20,69 +20,84 @@ function fuc_LoadImage(){
         imageViewer.LoadImage('http://localhost:82/dbrjs6.5/assets/images/cs-lm.png');
         imageViewer.LoadImage('http://localhost:82/dbrjs6.5/assets/images/cs-ibm.png');
     }else{
-        imageViewer.showFileChooseWindow();
+        imageViewer.ShowFileChooseWindow();
     }
 }
 
 function fuc_getCount(){
     if(!imageViewer){return false;}
-    var _imageCount = imageViewer.getCount();
+    var _imageCount = imageViewer.GetCount();
     alert(_imageCount);
     console.log(_imageCount);
 }
 
 function fuc_getCurentIndex(){
     if(!imageViewer){return false;}
-    var _curIndex = imageViewer.getCurentIndex();
+    var _curIndex = imageViewer.GetCurentIndex();
     alert(_curIndex);
     console.log(_curIndex);
 }
 
 function fuc_getImage(){
     if(!imageViewer){return false;}
-    var _curImage = imageViewer.getImage();
+    var _curImage = imageViewer.GetImage();
     alert(_curImage);
     console.log(_curImage);
 }
 
 function fuc_deleteImage(){
     if(!imageViewer){return false;}
-    imageViewer.deleteImage();
+    imageViewer.DeleteImage();
 }
 
 function fuc_changePage(cmd){
     if(!imageViewer){return false;}
-    imageViewer.changePage(cmd);
+    imageViewer.ChangePage(cmd);
 }
 
 function fuc_download(){
     if(!imageViewer){return false;}
-    imageViewer.download();
+    imageViewer.Download();
 }
 
 function fuc_showVideo(){
 	if(!imageViewer){return false;}
-    imageViewer.showVideo();
+    imageViewer.ShowVideo();
 }
 
 function fuc_enterEdit(){
 	if(!imageViewer){return false;}
-    imageViewer.enterEdit();
+    imageViewer.EnterEdit();
 }
 
 function fuc_cancelEdit(){
 	if(!imageViewer){return false;}
-    imageViewer.cancelEdit();
+    imageViewer.CancelEdit();
 }
 
 function fuc_rotateLeft(){
 	if(!imageViewer){return false;}
-    imageViewer.rotateLeft();
+    imageViewer.RotateLeft();
 }
 
 function fuc_rotateRight(){
 	if(!imageViewer){return false;}
-    imageViewer.rotateRight();
+    imageViewer.RotateRight();
+}
+
+function fuc_rotateMirror(){
+	if(!imageViewer){return false;}
+    imageViewer.Mirror();
+}
+
+function fuc_rotateFlip(){
+	if(!imageViewer){return false;}
+    imageViewer.Flip();
+}
+
+function fuc_Save(){
+    if(!imageViewer){return false;}
+    imageViewer.Save();
 }
 
 imageViewer._defaultFileInput.accept += ',image/tiff,application/pdf';
