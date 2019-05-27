@@ -6,14 +6,16 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>ImageViewer</title>
     <link rel="stylesheet" type="text/css" href="css/cssResetH5.css" />
-    <link rel="stylesheet" type="text/css" href="css/imageViewer.css" />
+    <link rel="stylesheet" type="text/css" href="css/mbc.css" />
+    <script type="text/javascript">
+    	var MBC = MBC || {};
+		MBC.Lib = MBC.Lib || {};
+    </script>
 </head>
 <body>
     <div id="main">
         <ul id="toolGrp">
             <li><button onclick="fuc_LoadImage()">LoadImage</button></li>
-            <li><button onclick="fuc_getCount()">getCount</button></li>
-            <li><button onclick="fuc_getCurentIndex()">getCurentIndex</button></li>
             <!--
             <li><button onclick="fuc_getImage()">getImage</button></li>
             <li><button onclick="fuc_deleteImage()">deleteImage</button></li>
@@ -28,25 +30,36 @@
             <li><button onclick="fuc_cancelEdit()">cancel</button></li>
             <li><button onclick="fuc_rotateLeft()">RotateLeft</button></li>
             <li><button onclick="fuc_rotateRight()">RotateRight</button></li>
+            <li><button onclick="fuc_rotate180()">Rotate180</button></li>
+            <li><button onclick="fuc_rotateMirror()">Mirror</button></li>
+            <li><button onclick="fuc_rotateFlip()">Flip</button></li>
+            <li><button onclick="fuc_Save()">Save</button></li>
+            <li><button onclick="fuc_Delete()">Delete</button></li>
         </ul>
         <div id="imageViewer"></div>
     </div>
 </body>
 <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+
+
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/exif.js"></script>
-
 
 <script type="text/javascript" src="js/pdf.js"></script>
 <script type="text/javascript" src="js/pdf.worker.js"></script>
 
-
 <script type="text/javascript" src="js/global-dom.js"></script>
+<script type="text/javascript" src="js/promise.js"></script>
 <script type="text/javascript" src="js/kUtil.js"></script>
 <script type="text/javascript" src="js/VideoViewer.js"></script>
 <script type="text/javascript" src="js/ImageAreaSelector.js"></script>
 <script type="text/javascript" src="js/ImageControl.js"></script>
 <script type="text/javascript" src="js/ThumbnailControl.js"></script>
 <script type="text/javascript" src="js/ImageViewer.js"></script>
-<script type="text/javascript" src="js/opration.js"></script>
+
+<!--
+<script type="text/javascript" src="js/build/mbc.js?v=20190522"></script>
+-->
+
+<script type="text/javascript" src="js/opration.js?v=20190522"></script>
 </html>
