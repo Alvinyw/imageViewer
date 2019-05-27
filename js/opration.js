@@ -1,4 +1,10 @@
-var imageViewer = new ImageViewer("imageViewer");
+var cfg = {
+	ContainerId:'imageViewer', 
+	Width:'100%', 
+	Height:'97%'
+}
+
+var imageViewer = new MBC.Lib.ImageViewer(cfg);
 
 imageViewer.onNumChange = function(curIndex,imgCount){
     var _curIndex = parseInt(curIndex)+1;
@@ -15,12 +21,12 @@ window.onresize = function(){
 function fuc_LoadImage(){
     if(!imageViewer){return false;}
     if(uaInfo.strVersion <11.0 && uaInfo.bIE){
-        imageViewer.LoadImage('http://localhost:82/dbrjs6.5/assets/images/cs-yc.png');
-        imageViewer.LoadImage('http://localhost:82/dbrjs6.5/assets/images/cs-avanza.png');
-        imageViewer.LoadImage('http://localhost:82/dbrjs6.5/assets/images/cs-lm.png');
-        imageViewer.LoadImage('http://localhost:82/dbrjs6.5/assets/images/cs-ibm.png');
+        imageViewer.LoadImageEx('http://localhost:82/dbrjs6.5/assets/images/cs-yc.png');
+        imageViewer.LoadImageEx('http://localhost:82/dbrjs6.5/assets/images/cs-avanza.png');
+        imageViewer.LoadImageEx('http://localhost:82/dbrjs6.5/assets/images/cs-lm.png');
+        imageViewer.LoadImageEx('http://localhost:82/dbrjs6.5/assets/images/cs-ibm.png');
     }else{
-        imageViewer.ShowFileChooseWindow();
+        imageViewer.LoadImageEx();
     }
 }
 
@@ -45,9 +51,9 @@ function fuc_getImage(){
     console.log(_curImage);
 }
 
-function fuc_deleteImage(){
+function fuc_Delete(){
     if(!imageViewer){return false;}
-    imageViewer.DeleteImage();
+    imageViewer.RemoveAllSelectedImages();
 }
 
 function fuc_changePage(cmd){
@@ -83,6 +89,11 @@ function fuc_rotateLeft(){
 function fuc_rotateRight(){
 	if(!imageViewer){return false;}
     imageViewer.RotateRight();
+}
+
+function fuc_rotate180(){
+    if(!imageViewer){return false;}
+    imageViewer.Rotate('',180);
 }
 
 function fuc_rotateMirror(){
@@ -218,7 +229,7 @@ var getCvsFromPdf = function(blob, handlePromise){
             }
         }).then(function(cvsAry){
             console.log(cvsAry);
-            imageViewer.LoadImage(cvsAry);
+            imageViewer.LoadImageEx(cvsAry);
 
             // for(var i=0;i<cvsAry.length;i++){
             //     //document.body.appendChild(cvsAry[i]);
@@ -258,11 +269,11 @@ self.addImageFromUrlWithPdfTiffAsync = imageViewer.beforeAddImgFromFileChooseWin
         //taskQueue.push(function(i){
             var file = files[i];
             if('image/tiff' == file.type){
-                getCvsFromTif(file, imageViewer.LoadImage);
+                getCvsFromTif(file, imageViewer.LoadImageEx);
             }else if('application/pdf' == file.type){
-                getCvsFromPdf(file, imageViewer.LoadImage);
+                getCvsFromPdf(file, imageViewer.LoadImageEx);
             }else{
-                imageViewer.LoadImage(file);
+                imageViewer.LoadImageEx(file);
             }
         //}, null, [i]);
     }

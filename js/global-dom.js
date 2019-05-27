@@ -1,82 +1,94 @@
-var lib = lib || {};
+(function (ML) {
+	var lib = ML || {};
 
-lib.getElDimensions = function (el) {
-	var displayFormat, elDimensions;
+	lib.getElDimensions = function (el) {
+		var displayFormat, elDimensions;
 
-	if (!el) return false;
+		if (!el) return false;
 
-	displayFormat = el.style.display;
+		displayFormat = el.style.display;
 
-	el.style.display = '';
-	
-	elDimensions = 
-	{
-		clientTop: el.clientTop, 
-		clientLeft: el.clientLeft,
-		clientWidth: el.clientWidth ? el.clientWidth : (parseInt(el.style.width) ? parseInt(el.style.width) : 0),
-		clientHeight: el.clientHeight ? el.clientHeight : (parseInt(el.style.height) ? parseInt(el.style.height) : 0)
-	};
+		el.style.display = '';
 
-	el.style.display = displayFormat;
+		elDimensions = 
+		{
+			clientTop: el.clientTop, 
+			clientLeft: el.clientLeft,
+			clientWidth: el.clientWidth ? el.clientWidth : (parseInt(el.style.width) ? parseInt(el.style.width) : 0),
+			clientHeight: el.clientHeight ? el.clientHeight : (parseInt(el.style.height) ? parseInt(el.style.height) : 0)
+		};
 
-	return elDimensions;
-}
+		el.style.display = displayFormat;
 
-lib.hasClass = function(obj,cls) {  
-    return obj.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));  
-};  
-  
-lib.addClass = function(obj,cls) {  
-    if (!this.hasClass(obj,cls)) obj.className += cls;  
-}  
-  
-lib.removeClass = function(obj,cls) {  
-    if (this.hasClass(obj,cls)) {  
-        var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');  
-        obj.className = obj.className.replace(reg, ' ');  
-    }  
-};  
-  
-// lib.toggleClass = function(obj,cls){  
-//     if(this.hasClass(obj,cls)){  
-//         this.removeClass(obj,cls);  
-//     }else{  
-//         this.addClass(obj,cls);  
-//     }  
-// };
+		return elDimensions;
+	}
 
-lib.doCallbackNoBreak = function(callback, paras){
-    if(callback){
-		try{
-			callback.apply(window, paras||[]);
+	lib.hasClass = function(obj,cls) {  
+		return obj.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));  
+	};  
+
+	lib.addClass = function(obj,cls) {  
+		if (!this.hasClass(obj,cls)) obj.className += cls;  
+	}  
+
+	lib.removeClass = function(obj,cls) {  
+		if (this.hasClass(obj,cls)) {  
+			var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');  
+			obj.className = obj.className.replace(reg, ' ');  
+		}  
+	};  
+
+	lib.isNumber = function (val) {
+		if(val === "" || val ==null){
+			return false;
 		}
-		catch(ex){
-			setTimeout(function(){throw(ex);},0);
+		if(!isNaN(val)){
+			return true;
+		}else{
+			return false;
 		}
 	}
-};
 
-lib.convertBase64ToBlob = function(base64Str, mimeType){
-    var byteCharacters = window.atob(base64Str);
-    var byteNumArr = new Array(byteCharacters.length);
-    for(var i=0; i < byteCharacters.length; ++i){
-        byteNumArr[i] = byteCharacters.charCodeAt(i);
-    }
-    var uint8Arr = new Uint8Array(byteNumArr);
-    return new Blob([uint8Arr], {type: mimeType});
-};
+	// lib.toggleClass = function(obj,cls){  
+	//     if(this.hasClass(obj,cls)){  
+	//         this.removeClass(obj,cls);  
+	//     }else{  
+	//         this.addClass(obj,cls);  
+	//     }  
+	// };
 
-lib.convertURLToBlob = function(url, callback) {
-    var http = new XMLHttpRequest();
-    http.open("GET", url, true);
-    http.responseType = "blob";
-    http.onloadend = function() {
+	lib.doCallbackNoBreak = function(callback, paras){
+		if(callback){
+			try{
+				callback.apply(window, paras||[]);
+			}
+			catch(ex){
+				setTimeout(function(){throw(ex);},0);
+			}
+		}
+	};
+
+	lib.convertBase64ToBlob = function(base64Str, mimeType){
+	var byteCharacters = window.atob(base64Str);
+	var byteNumArr = new Array(byteCharacters.length);
+	for(var i=0; i < byteCharacters.length; ++i){
+		byteNumArr[i] = byteCharacters.charCodeAt(i);
+	}
+	var uint8Arr = new Uint8Array(byteNumArr);
+	return new Blob([uint8Arr], {type: mimeType});
+	};
+
+	lib.convertURLToBlob = function(url, callback) {
+	var http = new XMLHttpRequest();
+	http.open("GET", url, true);
+	http.responseType = "blob";
+	http.onloadend = function() {
 		callback(this.response);
-    };
+	};
 	http.send();
-};
+	};
 
-lib.canvasToBlob = function(cvs, callback, mimeType, quality){
+	lib.canvasToBlob = function(cvs, callback, mimeType, quality){
 	if(cvs.toBlob){
 		cvs.toBlob(callback, mimeType, quality);
 	}else{
@@ -84,9 +96,9 @@ lib.canvasToBlob = function(cvs, callback, mimeType, quality){
 		var blob = lib.convertBase64ToBlob(b64str.substring(b64str.indexOf(",")+1), mimeType);
 		callback(blob);
 	}
-};
+	};
 
-lib.getBlobFromAnyImgData = function(imgData, callback){
+	lib.getBlobFromAnyImgData = function(imgData, callback){
 	if(imgData instanceof Blob){
 		callback(imgData);
 	}else if(imgData instanceof HTMLCanvasElement){
@@ -165,47 +177,47 @@ lib.getBlobFromAnyImgData = function(imgData, callback){
 		callback(null);
 	}
 
-};
+	};
 
 
-lib.addEvent = function(obj,type,handle){
+	lib.addEvent = function(obj,type,handle){
 	obj.addEventListener ? obj.addEventListener(type,handle,false) : obj.attachEvent("on"+type,handle);
-};
+	};
 
-lib.removeEvent = function(obj,type,handle){
+	lib.removeEvent = function(obj,type,handle){
 	obj.removeEventListener ? obj.removeEventListener(type,handle,false) : obj.detachEvent("on"+type,handle); 
-};
+	};
 
-lib.stopDefault = function(e){
+	lib.stopDefault = function(e){
 	if ( e && e.preventDefault ){ 
 		e.preventDefault();
 	} else { 
 		window.event.returnValue = false;
 	}
-};
+	};
 
-lib._querySelectorAll = function(element, selector){
+	lib._querySelectorAll = function(element, selector){
 	var idAllocator = 10000;
 	if (element.querySelectorAll){
 		return element.querySelectorAll(selector);
 	}else {
 		var needsID = element.id === "";
-        if (needsID) {
-            ++idAllocator;
-            element.id = "__qsa" + idAllocator;
-        }
-        try {
-            return document.querySelectorAll("#" + element.id + " " + selector);
-        }
-        finally {
-            if (needsID) {
-                element.id = "";
-            }
-        }
+		if (needsID) {
+			++idAllocator;
+			element.id = "__qsa" + idAllocator;
+		}
+		try {
+			return document.querySelectorAll("#" + element.id + " " + selector);
+		}
+		finally {
+			if (needsID) {
+				element.id = "";
+			}
+		}
 	}
-};
+	};
 
-lib.fireEvent = function (name, el) {
+	lib.fireEvent = function (name, el) {
 	var event;
 	if (document.createEvent) {
 		event = document.createEvent('HTMLEvents');
@@ -225,43 +237,70 @@ lib.fireEvent = function (name, el) {
 		if (el.dispatchEvent)
 			el.dispatchEvent(event);
 	}
-}
+	}
 
-//indexOf() do not compatible with IE6-8
-if(!Array.prototype.indexOf){  
+	//indexOf() do not compatible with IE6-8
+	if(!Array.prototype.indexOf){  
 	Array.prototype.indexOf = function(val){  
 		var value = this;  
 		for(var i =0; i < value.length; i++){  
-		   if(value[i] == val) return i;  
+			if(value[i] == val) return i;  
 		}  
-	   return -1;  
+		return -1;  
 	};  
- }
+	}
 
- // querySelector & querySelectorAll do not compatible with IE6-7
- if (!document.querySelectorAll) {
-    document.querySelectorAll = function (selectors) {
-        var style = document.createElement('style'), elements = [], element;
-        document.documentElement.firstChild.appendChild(style);
-        document._qsa = [];
+	// querySelector & querySelectorAll do not compatible with IE6-7
+	if (!document.querySelectorAll) {
+	document.querySelectorAll = function (selectors) {
+		var style = document.createElement('style'), elements = [], element;
+		document.documentElement.firstChild.appendChild(style);
+		document._qsa = [];
 
-        style.styleSheet.cssText = selectors + '{x-qsa:expression(document._qsa && document._qsa.push(this))}';
-        window.scrollBy(0, 0);
-        style.parentNode.removeChild(style);
+		style.styleSheet.cssText = selectors + '{x-qsa:expression(document._qsa && document._qsa.push(this))}';
+		window.scrollBy(0, 0);
+		style.parentNode.removeChild(style);
 
-        while (document._qsa.length) {
-            element = document._qsa.shift();
-            element.style.removeAttribute('x-qsa');
-            elements.push(element);
-        }
-        document._qsa = null;
-        return elements;
-    };
-}
+		while (document._qsa.length) {
+			element = document._qsa.shift();
+			element.style.removeAttribute('x-qsa');
+			elements.push(element);
+		}
+		document._qsa = null;
+		return elements;
+	};
+	}
 
-if (!document.querySelector) {
-    document.querySelector = function (selectors) {
-        var elements = document.querySelectorAll(selectors);
-        return (elements.length) ? elements[0] : null;
-    };
-}
+	if (!document.querySelector) {
+	document.querySelector = function (selectors) {
+		var elements = document.querySelectorAll(selectors);
+		return (elements.length) ? elements[0] : null;
+	};
+	}
+
+	// global errors
+	lib.Errors = {
+
+		Sucess: function (obj) {
+			obj.ErrorCode = 0;
+			obj.ErrorString = 'Successful.';
+		},
+
+		IndexOutOfRange: function (obj) {
+			obj.ErrorCode = -1000;
+			obj.ErrorString = 'The index is out of range.';
+		},
+			
+		FucNotValidInThisMode: function (obj,fuc,mode) {
+			obj.ErrorCode = -1001;
+			obj.ErrorString = ''+fuc+'(): This function is not valid in '+mode+' mode.';
+		},
+
+		InvalidValue: function (obj) {
+			obj.ErrorCode = -1002;
+			obj.ErrorString = 'Invalid value.';
+		},
+
+		__last: false
+	}
+})(MBC.Lib);
