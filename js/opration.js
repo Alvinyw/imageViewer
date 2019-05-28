@@ -51,9 +51,14 @@ function fuc_getImage(){
     console.log(_curImage);
 }
 
-function fuc_Delete(){
+function fuc_RemoveCurrentImage(){
     if(!imageViewer){return false;}
     imageViewer.RemoveAllSelectedImages();
+}
+
+function fuc_RemoveAllImages(){
+    if(!imageViewer){return false;}
+    imageViewer.RemoveAllImages();
 }
 
 function fuc_changePage(cmd){
@@ -74,11 +79,17 @@ function fuc_showVideo(){
 function fuc_enterEdit(){
 	if(!imageViewer){return false;}
     imageViewer.EnterEdit();
+
+    $(".visible_inEdit").show();
+    $(".visible_inView").hide();
 }
 
 function fuc_cancelEdit(){
 	if(!imageViewer){return false;}
     imageViewer.CancelEdit();
+
+    $(".visible_inEdit").hide();
+    $(".visible_inView").show();
 }
 
 function fuc_rotateLeft(){
@@ -109,6 +120,9 @@ function fuc_rotateFlip(){
 function fuc_Save(){
     if(!imageViewer){return false;}
     imageViewer.Save();
+
+    $(".visible_inEdit").hide();
+    $(".visible_inView").show();
 }
 
 imageViewer._defaultFileInput.accept += ',image/tiff,application/pdf';

@@ -1177,6 +1177,89 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 		}
 	}
 
+	lib.each = function (object, fn, context) {
+        if (object) {
+            var key,
+                val,
+                keys,
+                i = 0,
+                length = object.length,
+                // do not use typeof obj == 'function': bug in phantomjs
+                isObj = lib.isUndefined(length) || lib.isFunction(object);
+
+            context = context || null;
+
+            if (isObj) {
+                keys = lib.keys(object);
+                for (; i < keys.length; i++) {
+                    key = keys[i];
+                    // can not use hasOwnProperty
+                    if (fn.call(context, object[key], key, object) === false) {
+                        break;
+                    }
+                }
+            } else {
+                for (val = object[0];
+                    i < length; val = object[++i]) {
+                    if (fn.call(context, val, i, object) === false) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return object;
+	};
+
+	lib.isUndefined = function (exp) {
+		if (typeof(exp) == "undefined")
+		{
+			return true;
+		}
+		return false;
+	};
+	
+	lib.isFunction = function (_fun) {
+		return _fun && typeof (_fun) === 'function';
+	};
+
+	var hasEnumBug = !({ toString: 1 }.propertyIsEnumerable('toString')),
+        enumProperties = [
+            'constructor',
+            'hasOwnProperty',
+            'isPrototypeOf',
+            'propertyIsEnumerable',
+            'toString',
+            'toLocaleString',
+            'valueOf'
+        ];
+		
+    function hasOwnProperty(o, p) {
+        return ({}).hasOwnProperty.call(o, p);
+	}
+	
+	lib.keys = Object.keys || function(o) {
+        var result = [], p, i;
+
+        for (p in o) {
+            // lib.keys(new XX())
+            if (hasOwnProperty(o, p)) {
+                result.push(p);
+            }
+        }
+
+        if (hasEnumBug) {
+            for (i = enumProperties.length - 1; i >= 0; i--) {
+                p = enumProperties[i];
+                if (hasOwnProperty(o, p)) {
+                    result.push(p);
+                }
+            }
+        }
+
+        return result;
+	};
+
 	// lib.toggleClass = function(obj,cls){  
 	//     if(this.hasClass(obj,cls)){  
 	//         this.removeClass(obj,cls);  
@@ -1410,26 +1493,68 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 	lib.Errors = {
 
 		Sucess: function (obj) {
-			obj.ErrorCode = 0;
-			obj.ErrorString = 'Successful.';
+			obj._errorCode = 0;
+			obj._errorString = 'Successful.';
 		},
 
 		IndexOutOfRange: function (obj) {
-			obj.ErrorCode = -1000;
-			obj.ErrorString = 'The index is out of range.';
+			obj._errorCode = -1000;
+			obj._errorString = 'The index is out of range.';
 		},
 			
 		FucNotValidInThisMode: function (obj,fuc,mode) {
-			obj.ErrorCode = -1001;
-			obj.ErrorString = ''+fuc+'(): This function is not valid in '+mode+' mode.';
+			obj._errorCode = -1001;
+			obj._errorString = ''+fuc+'(): This function is not valid in '+mode+' mode.';
 		},
 
 		InvalidValue: function (obj) {
-			obj.ErrorCode = -1002;
-			obj.ErrorString = 'Invalid value.';
+			obj._errorCode = -1002;
+			obj._errorString = 'Invalid value.';
+		},
+
+		InvalidParameterType: function (obj) {
+			obj._errorCode = -1003;
+			obj._errorString = 'Parameter type is not supported.';
 		},
 
 		__last: false
+	}
+
+	lib.DEF = function (self, name, obj){
+		Object.defineProperty(self, name, obj);
+	}
+
+	lib.attachProperty = function (st) {
+		var _this = st;
+		var DEF = lib.DEF;
+
+		DEF(_this, 'ErrorCode', {
+			get: function () {// read-only
+				return _this._errorCode;
+			}
+		});
+
+		DEF(_this, 'ErrorString', {
+			get: function () {// read-only
+				if (_this._errorCode != 0) {
+					return _this._errorString;
+				}
+
+				return 'Successful.';
+			}
+		});
+
+		DEF(_this, 'HowManyImagesInBuffer', {
+			get: function () {
+				return _this.GetCount();
+			}
+		});
+
+		DEF(_this, 'CurrentImageIndexInBuffer', {
+			get: function () {
+				return _this.GetCurentIndex();
+			}
+		});
 	}
 })(MBC.Lib);/**
  * MIT https://github.com/lahmatiy/es6-promise-polyfill
@@ -2751,7 +2876,7 @@ kUtil.copyToClipBoard = function(txt){
 		_this.Left = (_this.containerWidth - _this.controlWidth)/2;
 		_this.Top = (_this.containerHeight - _this.controlHeight)/2;
 
-		if(_this.cIndex == _this.viewer.getCurentIndex())
+		if(_this.cIndex == _this.viewer.GetCurentIndex())
 			_this.SetLocation(_this.Left, _this.Top);
 
 		_this.Show();
@@ -3340,8 +3465,8 @@ kUtil.copyToClipBoard = function(txt){
         // ImageViewer 当前所处的模式：view、edit
         _this.mode = 'view';
 
-        _this.ErrorCode = 0;
-        _this.ErrorString = 'Successful';
+        _this._errorCode = 0;
+        _this._errorString = '';
 
         // ImageControl 数组
         _this.aryImageControls = [];
@@ -3512,6 +3637,7 @@ kUtil.copyToClipBoard = function(txt){
         _this.VideoViewer = new ML.VideoViewer(cfg);
         _this.ImageAreaSelector = new ML.ImageAreaSelector(cfg);
 
+        lib.attachProperty(_this);
         // 设置  ImageViewer 里的元素宽高
         _this.__init(cfg);
     }
@@ -3579,10 +3705,7 @@ kUtil.copyToClipBoard = function(txt){
 
     ImageViewer.prototype.LoadImageEx = function (imgData) {
         var _this = this;
-        if(_this.mode != 'view'){ 
-            _this.ErrorString = "LoadImage(): The function is only valid in 'view' mode.";
-            return false;
-        }
+        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'LoadImageEx','edit'); return false;}
 
         if(arguments.length == 0){
             _this.ShowFileChooseWindow();
@@ -3599,7 +3722,8 @@ kUtil.copyToClipBoard = function(txt){
             }
             return;
         }else{
-            _this.ErrorString = "addImage(imgData): Type of 'imgData' should be 'Blob', 'HTMLCanvasElement', 'HTMLImageElement', 'String(url)', 'Array(a array of source)', 'FileList'.";
+            //_this._errorString = "addImage(imgData): Type of 'imgData' should be 'Blob', 'HTMLCanvasElement', 'HTMLImageElement', 'String(url)', 'Array(a array of source)', 'FileList'.";
+            lib.Errors.InvalidParameterType(_this);
             return false;
         }
     }
@@ -3634,6 +3758,11 @@ kUtil.copyToClipBoard = function(txt){
         lib.Errors.Sucess(_this);
         return true;
     }
+
+    ImageViewer.prototype.ShowVideo = function(){
+        this.VideoViewer.showVideo();
+        return true;
+    };
 
     ImageViewer.prototype.ShowImage = function (index) {
         var _this = this;
@@ -3694,69 +3823,46 @@ kUtil.copyToClipBoard = function(txt){
         
     }
 
-    ImageViewer.prototype.Download = function(filename, index){
-        if(arguments.length < 2){
-            index = this.curIndex;
-        }
-        if(isNaN(index)){ return false; }
-        index = Math.round(index);
-        if(index < 0 || index >= this.aryImageControls.length){ return false; }
-        var a = document.createElement('a');
-        a.target='_blank';
-        var img = this.aryImageControls[index];
-        var blob = img.oriBlob || img.src;
-        if(!filename){
-            var suffix = "";
-            if(blob.type){
-                suffix = blob.type.substring(blob.type.indexOf('/')+1);
-            }else if(-1 != suffix.indexOf(".png")){
-                suffix = "png";
-            }else if(-1 != suffix.indexOf(".gif")){
-                suffix = "gif";
-            }else if(-1 != suffix.indexOf(".jpg") || -1 != suffix.indexOf(".jpeg")){
-                suffix = "jpg";
-            }else{
-                suffix = "png";
+    lib.each(['SaveAsBMP', 'SaveAsJPEG', 'SaveAsTIFF', 'SaveAsPNG', 'SaveAsPDF'], function (method) {
+        ImageViewer.prototype[method] = function(filename,index) {
+            var _this = this;
+            if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,method,'edit'); return false; }
+            if(arguments.length < 2){
+                index = _this.curIndex;
             }
-            filename = (new Date()).getTime() + '.' + suffix;
-        }
-        a.download = filename;
-        var objUrl = img.oriBlob ? URL.createObjectURL(blob) : img.src;
-        
-        a.href = objUrl;
-        // var ev = new MouseEvent('click',{
-        //     "view": window,
-        //     "bubbles": true,
-        //     "cancelable": false
-        // });
-        // a.dispatchEvent(ev);
+            if(!lib.isNumber(index)){ return false; }
+            index = Math.round(index);
+            if(index < 0 || index >= _this.aryImageControls.length){ return false; }
 
-        if (document.createEvent) {
-            var evObj = document.createEvent('MouseEvents');
-            evObj.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,true,false,0,null);
-            a.dispatchEvent(evObj);
-        }else if(document.createEventObject){
-            var evObj = document.createEventObject();
-            a.fireEvent( 'onclick', evObj );
-        }else{
+            var a = document.createElement('a');
+            a.target='_blank';
+            var img = _this.aryImageControls[index].objImage;
+            var blob = img.src;
+            
+            if(!filename){
+                filename = (new Date()).getTime() + '.png';
+            }
+            a.download = filename;
+            //var objUrl = URL.createObjectURL(blob);
+            var objUrl = blob;
+            a.href = objUrl;
+            var ev = new MouseEvent('click',{
+                "view": window,
+                "bubbles": true,
+                "cancelable": false
+            });
+            a.dispatchEvent(ev);
             //a.click();
-        }
-        
-        //lib.fireEvent('click',a);
-        
-        setTimeout(function(){
-            img.oriBlob ? URL.revokeObjectURL(objUrl) : null;
-        }, 10000);
-        return filename;
-    };
+            setTimeout(function(){
+                URL.revokeObjectURL(objUrl);
+            }, 10000);
+            return filename;
+        };
+    });
 
     ImageViewer.prototype.ShowFileChooseWindow = function(){
         var _this = this;
-        if(_this.mode != 'view'){ 
-            _this.ErrorString = "The function is only valid in 'view' mode.";
-            console.log(_this.ErrorString);
-            return false;
-        }
+        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'ShowFileChooseWindow','edit'); return false; }
 
         _this._defaultFileInput.click();
         return true;
@@ -3860,20 +3966,6 @@ kUtil.copyToClipBoard = function(txt){
         return true;
     };
 
-    ImageViewer.prototype.__pushStack = function(funName){
-        var _this = this;
-        var _curStack = {
-            fun: funName,
-            crop: _this.ImageAreaSelector.__getDrawArea(),
-            transform: $(_this._canvas).getTransform(),
-            srcBlob: _this.aryImageControls[_this.curIndex].imageUrl
-        };
-
-        _this.stack.push(_curStack);
-        _this.curStep++;
-        return true;
-    }
-
     ImageViewer.prototype.CancelEdit = function(){
         var _this = this;
 
@@ -3921,6 +4013,26 @@ kUtil.copyToClipBoard = function(txt){
         lib.Errors.Sucess(_this);
         return true;
     };
+
+    ImageViewer.prototype.Rotate = function(index, angle){
+        var _this = this;
+        if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Rotate','view'); return false; }
+
+        var rotateRightTime = parseInt(angle/90);
+        var transformNew = $(_this._canvas).getTransform();
+        for(var i=0;i<rotateRightTime;i++){
+            transformNew = kUtil.Matrix.dot(new kUtil.Matrix(0,1,-1,0,0,0), transformNew);
+        }
+        $(_this._canvas).setTransform(transformNew);
+
+        _this.rotateAngle +=90;
+
+        _this.__pushStack('rotateRight');
+        _this.__updateCanvasUI();
+
+        lib.Errors.Sucess(_this);
+        return true;
+    }
 
     ImageViewer.prototype.Mirror = function(){
         var _this = this;
@@ -4061,27 +4173,17 @@ kUtil.copyToClipBoard = function(txt){
                 curImg.Refresh();
 
                 curThumbImg.imageUrl = url;
-                curThumbImg.Refresh();
-
-                // var newImg = document.createElement("img");
-        
-                // newImg.onload = function() {
-                //     // no longer need to read the blob so it's revoked
-                //     URL.revokeObjectURL(url);
-                // };
-            
-                // newImg.src = url;
-                // document.body.appendChild(newImg);
+                curThumbImg.Refresh();               
             });
         }
 
         _this.CancelEdit();
-
         return true;
     }
 
     ImageViewer.prototype.RemoveAllSelectedImages = function(){
         var _this = this, index = _this.curIndex;
+        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'RemoveAllSelectedImages','edit'); return false; }
 
         // 删除 ImageControl 控件
         _this.__RemoveImageControl(index);
@@ -4096,7 +4198,8 @@ kUtil.copyToClipBoard = function(txt){
     }
 
     ImageViewer.prototype.RemoveAllImages = function(){
-        var _this = this,i;
+        var _this = this, i;
+        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'RemoveAllImages','edit'); return false; }
 
         // 删除 ImageControl 控件
         var iCount = _this.aryImageControls.length;
@@ -4331,10 +4434,19 @@ kUtil.copyToClipBoard = function(txt){
 
     };
 
-    ImageViewer.prototype.ShowVideo = function(){
-        this.VideoViewer.showVideo();
+    ImageViewer.prototype.__pushStack = function(funName){
+        var _this = this;
+        var _curStack = {
+            fun: funName,
+            crop: _this.ImageAreaSelector.__getDrawArea(),
+            transform: $(_this._canvas).getTransform(),
+            srcBlob: _this.aryImageControls[_this.curIndex].imageUrl
+        };
+
+        _this.stack.push(_curStack);
+        _this.curStep++;
         return true;
-    };
+    }
 
     ImageViewer.prototype.onNumChange = null;
     ImageViewer.prototype._updateNumUI = function(){

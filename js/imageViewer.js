@@ -41,8 +41,8 @@
         // ImageViewer 当前所处的模式：view、edit
         _this.mode = 'view';
 
-        _this.ErrorCode = 0;
-        _this.ErrorString = 'Successful';
+        _this._errorCode = 0;
+        _this._errorString = '';
 
         // ImageControl 数组
         _this.aryImageControls = [];
@@ -213,6 +213,7 @@
         _this.VideoViewer = new ML.VideoViewer(cfg);
         _this.ImageAreaSelector = new ML.ImageAreaSelector(cfg);
 
+        lib.attachProperty(_this);
         // 设置  ImageViewer 里的元素宽高
         _this.__init(cfg);
     }
@@ -280,10 +281,7 @@
 
     ImageViewer.prototype.LoadImageEx = function (imgData) {
         var _this = this;
-        if(_this.mode != 'view'){ 
-            _this.ErrorString = "LoadImage(): The function is only valid in 'view' mode.";
-            return false;
-        }
+        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'LoadImageEx','edit'); return false;}
 
         if(arguments.length == 0){
             _this.ShowFileChooseWindow();
@@ -300,7 +298,8 @@
             }
             return;
         }else{
-            _this.ErrorString = "addImage(imgData): Type of 'imgData' should be 'Blob', 'HTMLCanvasElement', 'HTMLImageElement', 'String(url)', 'Array(a array of source)', 'FileList'.";
+            //_this._errorString = "addImage(imgData): Type of 'imgData' should be 'Blob', 'HTMLCanvasElement', 'HTMLImageElement', 'String(url)', 'Array(a array of source)', 'FileList'.";
+            lib.Errors.InvalidParameterType(_this);
             return false;
         }
     }
@@ -335,6 +334,11 @@
         lib.Errors.Sucess(_this);
         return true;
     }
+
+    ImageViewer.prototype.ShowVideo = function(){
+        this.VideoViewer.showVideo();
+        return true;
+    };
 
     ImageViewer.prototype.ShowImage = function (index) {
         var _this = this;
@@ -395,69 +399,46 @@
         
     }
 
-    ImageViewer.prototype.Download = function(filename, index){
-        if(arguments.length < 2){
-            index = this.curIndex;
-        }
-        if(isNaN(index)){ return false; }
-        index = Math.round(index);
-        if(index < 0 || index >= this.aryImageControls.length){ return false; }
-        var a = document.createElement('a');
-        a.target='_blank';
-        var img = this.aryImageControls[index];
-        var blob = img.oriBlob || img.src;
-        if(!filename){
-            var suffix = "";
-            if(blob.type){
-                suffix = blob.type.substring(blob.type.indexOf('/')+1);
-            }else if(-1 != suffix.indexOf(".png")){
-                suffix = "png";
-            }else if(-1 != suffix.indexOf(".gif")){
-                suffix = "gif";
-            }else if(-1 != suffix.indexOf(".jpg") || -1 != suffix.indexOf(".jpeg")){
-                suffix = "jpg";
-            }else{
-                suffix = "png";
+    lib.each(['SaveAsBMP', 'SaveAsJPEG', 'SaveAsTIFF', 'SaveAsPNG', 'SaveAsPDF'], function (method) {
+        ImageViewer.prototype[method] = function(filename,index) {
+            var _this = this;
+            if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,method,'edit'); return false; }
+            if(arguments.length < 2){
+                index = _this.curIndex;
             }
-            filename = (new Date()).getTime() + '.' + suffix;
-        }
-        a.download = filename;
-        var objUrl = img.oriBlob ? URL.createObjectURL(blob) : img.src;
-        
-        a.href = objUrl;
-        // var ev = new MouseEvent('click',{
-        //     "view": window,
-        //     "bubbles": true,
-        //     "cancelable": false
-        // });
-        // a.dispatchEvent(ev);
+            if(!lib.isNumber(index)){ return false; }
+            index = Math.round(index);
+            if(index < 0 || index >= _this.aryImageControls.length){ return false; }
 
-        if (document.createEvent) {
-            var evObj = document.createEvent('MouseEvents');
-            evObj.initMouseEvent('click',true,true,window,0,0,0,0,0,false,false,true,false,0,null);
-            a.dispatchEvent(evObj);
-        }else if(document.createEventObject){
-            var evObj = document.createEventObject();
-            a.fireEvent( 'onclick', evObj );
-        }else{
+            var a = document.createElement('a');
+            a.target='_blank';
+            var img = _this.aryImageControls[index].objImage;
+            var blob = img.src;
+            
+            if(!filename){
+                filename = (new Date()).getTime() + '.png';
+            }
+            a.download = filename;
+            //var objUrl = URL.createObjectURL(blob);
+            var objUrl = blob;
+            a.href = objUrl;
+            var ev = new MouseEvent('click',{
+                "view": window,
+                "bubbles": true,
+                "cancelable": false
+            });
+            a.dispatchEvent(ev);
             //a.click();
-        }
-        
-        //lib.fireEvent('click',a);
-        
-        setTimeout(function(){
-            img.oriBlob ? URL.revokeObjectURL(objUrl) : null;
-        }, 10000);
-        return filename;
-    };
+            setTimeout(function(){
+                URL.revokeObjectURL(objUrl);
+            }, 10000);
+            return filename;
+        };
+    });
 
     ImageViewer.prototype.ShowFileChooseWindow = function(){
         var _this = this;
-        if(_this.mode != 'view'){ 
-            _this.ErrorString = "The function is only valid in 'view' mode.";
-            console.log(_this.ErrorString);
-            return false;
-        }
+        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'ShowFileChooseWindow','edit'); return false; }
 
         _this._defaultFileInput.click();
         return true;
@@ -560,20 +541,6 @@
         lib.Errors.Sucess(_this);
         return true;
     };
-
-    ImageViewer.prototype.__pushStack = function(funName){
-        var _this = this;
-        var _curStack = {
-            fun: funName,
-            crop: _this.ImageAreaSelector.__getDrawArea(),
-            transform: $(_this._canvas).getTransform(),
-            srcBlob: _this.aryImageControls[_this.curIndex].imageUrl
-        };
-
-        _this.stack.push(_curStack);
-        _this.curStep++;
-        return true;
-    }
 
     ImageViewer.prototype.CancelEdit = function(){
         var _this = this;
@@ -782,27 +749,17 @@
                 curImg.Refresh();
 
                 curThumbImg.imageUrl = url;
-                curThumbImg.Refresh();
-
-                // var newImg = document.createElement("img");
-        
-                // newImg.onload = function() {
-                //     // no longer need to read the blob so it's revoked
-                //     URL.revokeObjectURL(url);
-                // };
-            
-                // newImg.src = url;
-                // document.body.appendChild(newImg);
+                curThumbImg.Refresh();               
             });
         }
 
         _this.CancelEdit();
-
         return true;
     }
 
     ImageViewer.prototype.RemoveAllSelectedImages = function(){
         var _this = this, index = _this.curIndex;
+        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'RemoveAllSelectedImages','edit'); return false; }
 
         // 删除 ImageControl 控件
         _this.__RemoveImageControl(index);
@@ -817,7 +774,8 @@
     }
 
     ImageViewer.prototype.RemoveAllImages = function(){
-        var _this = this,i;
+        var _this = this, i;
+        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'RemoveAllImages','edit'); return false; }
 
         // 删除 ImageControl 控件
         var iCount = _this.aryImageControls.length;
@@ -1052,10 +1010,19 @@
 
     };
 
-    ImageViewer.prototype.ShowVideo = function(){
-        this.VideoViewer.showVideo();
+    ImageViewer.prototype.__pushStack = function(funName){
+        var _this = this;
+        var _curStack = {
+            fun: funName,
+            crop: _this.ImageAreaSelector.__getDrawArea(),
+            transform: $(_this._canvas).getTransform(),
+            srcBlob: _this.aryImageControls[_this.curIndex].imageUrl
+        };
+
+        _this.stack.push(_curStack);
+        _this.curStep++;
         return true;
-    };
+    }
 
     ImageViewer.prototype.onNumChange = null;
     ImageViewer.prototype._updateNumUI = function(){

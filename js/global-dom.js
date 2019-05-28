@@ -49,6 +49,89 @@
 		}
 	}
 
+	lib.each = function (object, fn, context) {
+        if (object) {
+            var key,
+                val,
+                keys,
+                i = 0,
+                length = object.length,
+                // do not use typeof obj == 'function': bug in phantomjs
+                isObj = lib.isUndefined(length) || lib.isFunction(object);
+
+            context = context || null;
+
+            if (isObj) {
+                keys = lib.keys(object);
+                for (; i < keys.length; i++) {
+                    key = keys[i];
+                    // can not use hasOwnProperty
+                    if (fn.call(context, object[key], key, object) === false) {
+                        break;
+                    }
+                }
+            } else {
+                for (val = object[0];
+                    i < length; val = object[++i]) {
+                    if (fn.call(context, val, i, object) === false) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return object;
+	};
+
+	lib.isUndefined = function (exp) {
+		if (typeof(exp) == "undefined")
+		{
+			return true;
+		}
+		return false;
+	};
+	
+	lib.isFunction = function (_fun) {
+		return _fun && typeof (_fun) === 'function';
+	};
+
+	var hasEnumBug = !({ toString: 1 }.propertyIsEnumerable('toString')),
+        enumProperties = [
+            'constructor',
+            'hasOwnProperty',
+            'isPrototypeOf',
+            'propertyIsEnumerable',
+            'toString',
+            'toLocaleString',
+            'valueOf'
+        ];
+		
+    function hasOwnProperty(o, p) {
+        return ({}).hasOwnProperty.call(o, p);
+	}
+	
+	lib.keys = Object.keys || function(o) {
+        var result = [], p, i;
+
+        for (p in o) {
+            // lib.keys(new XX())
+            if (hasOwnProperty(o, p)) {
+                result.push(p);
+            }
+        }
+
+        if (hasEnumBug) {
+            for (i = enumProperties.length - 1; i >= 0; i--) {
+                p = enumProperties[i];
+                if (hasOwnProperty(o, p)) {
+                    result.push(p);
+                }
+            }
+        }
+
+        return result;
+	};
+
 	// lib.toggleClass = function(obj,cls){  
 	//     if(this.hasClass(obj,cls)){  
 	//         this.removeClass(obj,cls);  
@@ -282,25 +365,67 @@
 	lib.Errors = {
 
 		Sucess: function (obj) {
-			obj.ErrorCode = 0;
-			obj.ErrorString = 'Successful.';
+			obj._errorCode = 0;
+			obj._errorString = 'Successful.';
 		},
 
 		IndexOutOfRange: function (obj) {
-			obj.ErrorCode = -1000;
-			obj.ErrorString = 'The index is out of range.';
+			obj._errorCode = -1000;
+			obj._errorString = 'The index is out of range.';
 		},
 			
 		FucNotValidInThisMode: function (obj,fuc,mode) {
-			obj.ErrorCode = -1001;
-			obj.ErrorString = ''+fuc+'(): This function is not valid in '+mode+' mode.';
+			obj._errorCode = -1001;
+			obj._errorString = ''+fuc+'(): This function is not valid in '+mode+' mode.';
 		},
 
 		InvalidValue: function (obj) {
-			obj.ErrorCode = -1002;
-			obj.ErrorString = 'Invalid value.';
+			obj._errorCode = -1002;
+			obj._errorString = 'Invalid value.';
+		},
+
+		InvalidParameterType: function (obj) {
+			obj._errorCode = -1003;
+			obj._errorString = 'Parameter type is not supported.';
 		},
 
 		__last: false
+	}
+
+	lib.DEF = function (self, name, obj){
+		Object.defineProperty(self, name, obj);
+	}
+
+	lib.attachProperty = function (st) {
+		var _this = st;
+		var DEF = lib.DEF;
+
+		DEF(_this, 'ErrorCode', {
+			get: function () {// read-only
+				return _this._errorCode;
+			}
+		});
+
+		DEF(_this, 'ErrorString', {
+			get: function () {// read-only
+				if (_this._errorCode != 0) {
+					return _this._errorString;
+				}
+
+				return 'Successful.';
+			}
+		});
+
+		DEF(_this, 'HowManyImagesInBuffer', {
+			get: function () {
+				return _this.GetCount();
+			}
+		});
+
+		DEF(_this, 'CurrentImageIndexInBuffer', {
+			get: function () {
+				return _this.GetCurentIndex();
+			}
+		});
 	}
 })(MBC.Lib);

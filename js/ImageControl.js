@@ -94,7 +94,7 @@
 		_this.Left = (_this.containerWidth - _this.controlWidth)/2;
 		_this.Top = (_this.containerHeight - _this.controlHeight)/2;
 
-		if(_this.cIndex == _this.viewer.getCurentIndex())
+		if(_this.cIndex == _this.viewer.GetCurentIndex())
 			_this.SetLocation(_this.Left, _this.Top);
 
 		_this.Show();
