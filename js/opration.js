@@ -117,6 +117,11 @@ function fuc_rotateFlip(){
     imageViewer.Flip();
 }
 
+function fuc_Crop(){
+    if(!imageViewer){return false;}
+    imageViewer.Crop();
+}
+
 function fuc_Save(){
     if(!imageViewer){return false;}
     imageViewer.Save();

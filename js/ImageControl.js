@@ -164,7 +164,7 @@
 		}
 
 		_this.__fitImage();
-
+		_this.SetVisible(true);
 		return true;
 	};
 
@@ -181,7 +181,6 @@
 		var _this = this;
 
 		_this.__getImageByUrl();
-
 		return true;
 	};
 
@@ -236,7 +235,6 @@
 		newImage.onerror = function (e) {
 			//newImage.src = url;
 		};
-
 		return true;
 	};
 

@@ -36,7 +36,15 @@
 			var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');  
 			obj.className = obj.className.replace(reg, ' ');  
 		}  
-	};  
+	}; 
+
+	lib.toggleClass = function(obj,cls){  
+	    if(this.hasClass(obj,cls)){  
+	        this.removeClass(obj,cls);  
+	    }else{  
+	        this.addClass(obj,cls);  
+	    }  
+	};
 
 	lib.isNumber = function (val) {
 		if(val === "" || val ==null){
@@ -131,14 +139,6 @@
 
         return result;
 	};
-
-	// lib.toggleClass = function(obj,cls){  
-	//     if(this.hasClass(obj,cls)){  
-	//         this.removeClass(obj,cls);  
-	//     }else{  
-	//         this.addClass(obj,cls);  
-	//     }  
-	// };
 
 	lib.doCallbackNoBreak = function(callback, paras){
 		if(callback){
@@ -262,128 +262,144 @@
 
 	};
 
-
 	lib.addEvent = function(obj,type,handle){
-	obj.addEventListener ? obj.addEventListener(type,handle,false) : obj.attachEvent("on"+type,handle);
+		var typeAry = type.split(' ');
+		if(!obj.length){
+			for(var j=0;j<typeAry.length;j++){
+				obj.addEventListener ? obj.addEventListener(typeAry[j],handle,false) : obj.attachEvent("on"+typeAry[j],handle);
+			}
+		}else{
+			for(var i=0;i<obj.length;i++){
+				for(var j=0;j<typeAry.length;j++){
+					obj[i].addEventListener ? obj[i].addEventListener(typeAry[j],handle,false) : obj[i].attachEvent("on"+typeAry[j],handle);
+				}
+			}
+		}
 	};
 
 	lib.removeEvent = function(obj,type,handle){
-	obj.removeEventListener ? obj.removeEventListener(type,handle,false) : obj.detachEvent("on"+type,handle); 
+		var typeAry = type.split(' ');
+		if(!obj.length){
+			for(var j=0;j<typeAry.length;j++){
+				obj.removeEventListener ? obj.removeEventListener(typeAry[j],handle,false) : obj.detachEvent("on"+typeAry[j],handle);
+			}
+		}else{
+			for(var i=0;i<obj.length;i++){
+				for(var j=0;j<typeAry.length;j++){
+					obj[i].removeEventListener ? obj[i].removeEventListener(typeAry[j],handle,false) : obj[i].detachEvent("on"+typeAry[j],handle);
+				}
+			}
+		}
 	};
 
 	lib.stopDefault = function(e){
-	if ( e && e.preventDefault ){ 
-		e.preventDefault();
-	} else { 
-		window.event.returnValue = false;
-	}
+		if ( e && e.preventDefault ){ 
+			e.preventDefault();
+		} else { 
+			window.event.returnValue = false;
+		}
 	};
 
 	lib._querySelectorAll = function(element, selector){
-	var idAllocator = 10000;
-	if (element.querySelectorAll){
-		return element.querySelectorAll(selector);
-	}else {
-		var needsID = element.id === "";
-		if (needsID) {
-			++idAllocator;
-			element.id = "__qsa" + idAllocator;
-		}
-		try {
-			return document.querySelectorAll("#" + element.id + " " + selector);
-		}
-		finally {
+		var idAllocator = 10000;
+		if (element.querySelectorAll){
+			return element.querySelectorAll(selector);
+		}else {
+			var needsID = element.id === "";
 			if (needsID) {
-				element.id = "";
+				++idAllocator;
+				element.id = "__qsa" + idAllocator;
+			}
+			try {
+				return document.querySelectorAll("#" + element.id + " " + selector);
+			}
+			finally {
+				if (needsID) {
+					element.id = "";
+				}
 			}
 		}
-	}
 	};
 
 	lib.fireEvent = function (name, el) {
-	var event;
-	if (document.createEvent) {
-		event = document.createEvent('HTMLEvents');
-		event.initEvent(name, true, true);
+		var event;
+		if (document.createEvent) {
+			event = document.createEvent('HTMLEvents');
+			event.initEvent(name, true, true);
 
-		if (el.dispatchEvent)
-			el.dispatchEvent(event);
-	}
-	else if (document.createEventObject) {
-		event = document.createEventObject();
-		event.bubbles = true;
-		event.cancelable = true;
-		el.fireEvent(name, event);
-	}
-	else {
-		event = new Event(name);
-		if (el.dispatchEvent)
-			el.dispatchEvent(event);
-	}
+			if (el.dispatchEvent)
+				el.dispatchEvent(event);
+		}
+		else if (document.createEventObject) {
+			event = document.createEventObject();
+			event.bubbles = true;
+			event.cancelable = true;
+			el.fireEvent(name, event);
+		}
+		else {
+			event = new Event(name);
+			if (el.dispatchEvent)
+				el.dispatchEvent(event);
+		}
 	}
 
 	//indexOf() do not compatible with IE6-8
 	if(!Array.prototype.indexOf){  
-	Array.prototype.indexOf = function(val){  
-		var value = this;  
-		for(var i =0; i < value.length; i++){  
-			if(value[i] == val) return i;  
-		}  
-		return -1;  
-	};  
+		Array.prototype.indexOf = function(val){  
+			var value = this;  
+			for(var i =0; i < value.length; i++){  
+				if(value[i] == val) return i;  
+			}  
+			return -1;  
+		};  
 	}
 
 	// querySelector & querySelectorAll do not compatible with IE6-7
 	if (!document.querySelectorAll) {
-	document.querySelectorAll = function (selectors) {
-		var style = document.createElement('style'), elements = [], element;
-		document.documentElement.firstChild.appendChild(style);
-		document._qsa = [];
+		document.querySelectorAll = function (selectors) {
+			var style = document.createElement('style'), elements = [], element;
+			document.documentElement.firstChild.appendChild(style);
+			document._qsa = [];
 
-		style.styleSheet.cssText = selectors + '{x-qsa:expression(document._qsa && document._qsa.push(this))}';
-		window.scrollBy(0, 0);
-		style.parentNode.removeChild(style);
+			style.styleSheet.cssText = selectors + '{x-qsa:expression(document._qsa && document._qsa.push(this))}';
+			window.scrollBy(0, 0);
+			style.parentNode.removeChild(style);
 
-		while (document._qsa.length) {
-			element = document._qsa.shift();
-			element.style.removeAttribute('x-qsa');
-			elements.push(element);
-		}
-		document._qsa = null;
-		return elements;
-	};
+			while (document._qsa.length) {
+				element = document._qsa.shift();
+				element.style.removeAttribute('x-qsa');
+				elements.push(element);
+			}
+			document._qsa = null;
+			return elements;
+		};
 	}
 
 	if (!document.querySelector) {
-	document.querySelector = function (selectors) {
-		var elements = document.querySelectorAll(selectors);
-		return (elements.length) ? elements[0] : null;
-	};
+		document.querySelector = function (selectors) {
+			var elements = document.querySelectorAll(selectors);
+			return (elements.length) ? elements[0] : null;
+		};
 	}
 
 	// global errors
 	lib.Errors = {
-
 		Sucess: function (obj) {
 			obj._errorCode = 0;
 			obj._errorString = 'Successful.';
 		},
-
 		IndexOutOfRange: function (obj) {
 			obj._errorCode = -1000;
 			obj._errorString = 'The index is out of range.';
 		},
-			
 		FucNotValidInThisMode: function (obj,fuc,mode) {
 			obj._errorCode = -1001;
 			obj._errorString = ''+fuc+'(): This function is not valid in '+mode+' mode.';
 		},
-
 		InvalidValue: function (obj) {
 			obj._errorCode = -1002;
 			obj._errorString = 'Invalid value.';
 		},
-
 		InvalidParameterType: function (obj) {
 			obj._errorCode = -1003;
 			obj._errorString = 'Parameter type is not supported.';
@@ -405,7 +421,6 @@
 				return _this._errorCode;
 			}
 		});
-
 		DEF(_this, 'ErrorString', {
 			get: function () {// read-only
 				if (_this._errorCode != 0) {
@@ -415,17 +430,16 @@
 				return 'Successful.';
 			}
 		});
-
 		DEF(_this, 'HowManyImagesInBuffer', {
 			get: function () {
 				return _this.GetCount();
 			}
 		});
-
 		DEF(_this, 'CurrentImageIndexInBuffer', {
 			get: function () {
 				return _this.GetCurentIndex();
 			}
 		});
 	}
+
 })(MBC.Lib);

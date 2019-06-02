@@ -85,12 +85,9 @@
         });
 
         _this._startPos = {};
-        lib.addEvent(_this._imgContainer,"touchstart", fuc_touchstart);
+        lib.addEvent(_this._imgContainer,"touchstart mousedown", fuc_touchstart);
         lib.addEvent(_this._imgContainer,"touchmove", fuc_touchmove);
-        lib.addEvent(_this._imgContainer,"touchend", fuc_touchend);
-
-        lib.addEvent(_this._imgContainer,"mousedown", fuc_touchstart);
-        lib.addEvent(_this._imgContainer,"mouseup", fuc_touchend);
+        lib.addEvent(_this._imgContainer,"touchend mouseup", fuc_touchend);
         
         function fuc_touchstart(event){
             var ev = event || window.event;
@@ -180,30 +177,26 @@
         }
 
         //https://developer.mozilla.org/zh-CN/docs/Web/Events
-        
-        _this.videoSettings = {video:{/*width:{ideal:2048},height:{ideal:2048},*/facingMode:{ideal:"environment"}}};
 
         // 操做数组：记录操作方法
         _this.stack = [];
         _this.curStep = -1;
 
-        // 点击 save 时的旋转角度总数
-        _this.rotateAngle = 0;
-        // 点击 save 时的 filp 总次数
-        _this.flipNum = 0;
-        // 点击 save 时的 mirror 总次数
-        _this.mirrorNum = 0;
+        // ImageViewer 当前显示的图片是否因为旋转而宽高互换
+        _this.isSwitchedWH = false;
 
         // 是否替换原图
-        _this.replaceOriginalImage = true;
+        _this.replaceOriginalImage = false;
 
         // Canvas 的宽高和位置信息
         _this._canvasArea = {
-            width: 0,
-            height: 0,
+            width: 300,
+            height: 150,
             left: 0,
             top: 0
         };
+        
+        _this.videoSettings = {video:{/*width:{ideal:2048},height:{ideal:2048},*/facingMode:{ideal:"environment"}}};
 
         var cfg = {};
         cfg.viewer = _this;
@@ -245,11 +238,11 @@
 
         _this._thumbnailsDiv.style.height = _this._thumbnailContainerH + 'px';
 
-        var maxEditingCvsWH;
+        _this.maxEditingCvsWH;
         (function(){
             var dpr = window.devicePixelRatio || 1;
             var w = screen.width, h = screen.height;
-            maxEditingCvsWH = Math.min(w,h)*dpr;
+            _this.maxEditingCvsWH = Math.min(w,h)*dpr;
         })();
     }
 
@@ -535,22 +528,44 @@
         _this.mode = 'edit';
 
         _this.aryImageControls[_this.curIndex].SetVisible(false);
-        _this.__pushStack('enterEdit');
-        _this.__updateCanvasUI();
+        _this.__setCanvasVisible(true);
+        _this.ctx.clearRect(0,0,_this._canvasArea.width,_this._canvasArea.height);
+        _this._canvasArea = {
+            width: 300,
+            height: 150,
+            left: 0,
+            top: 0
+        };
+        var transformNew = new kUtil.Matrix(1,0,0,1,0,0);
+        $(_this._canvas).setTransform(transformNew);
+        var _curStack = {
+            fun: 'enterEdit',
+            crop: {x: 0, y: 0, width: 1, height: 1},
+            draw: {x: 0, y: 0, width: 0, height: 0},
+            transform: new kUtil.Matrix(1,0,0,1,0,0),
+            srcBlob: _this.aryImageControls[_this.curIndex].imageUrl
+        };
+        _this.stack.push(_curStack);
+        _this.curStep++;
+
+        _this.__updateCvsInner(false);
+        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
     };
 
-    ImageViewer.prototype.CancelEdit = function(){
+    ImageViewer.prototype.CancelEdit = function(bShowImg){
         var _this = this;
-
-        if(_this.mode == 'view'){ lib.Errors.FucNotValidInThisMode(_this,'CancelEdit','view'); return false; }
         _this.mode = 'view';
+        var _bShowImg = (bShowImg == false)?false:true;
 
-        _this.aryImageControls[_this.curIndex].SetVisible(true);
-
-        _this.__updateCanvasUI();
+        _this.__setCanvasVisible(false);
+        _this.aryImageControls[_this.curIndex].SetVisible(_bShowImg);
+        _this.stack = [];
+        _this.curStep = -1;
+        _this.isSwitchedWH = false;
+        _this.ImageAreaSelector.HideCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -563,11 +578,10 @@
         var transformOri = $(_this._canvas).getTransform();
         var transformNew = kUtil.Matrix.dot(new kUtil.Matrix(0,-1,1,0,0,0), transformOri);
         $(_this._canvas).setTransform(transformNew);
-
-        _this.rotateAngle -=90;
         
         _this.__pushStack('rotateLeft');
-        _this.__updateCanvasUI();
+        _this.__setCanvasStyleFit();
+        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -581,10 +595,9 @@
         var transformNew = kUtil.Matrix.dot(new kUtil.Matrix(0,1,-1,0,0,0), transformOri);
         $(_this._canvas).setTransform(transformNew);
 
-        _this.rotateAngle +=90;
-
         _this.__pushStack('rotateRight');
-        _this.__updateCanvasUI();
+        _this.__setCanvasStyleFit();
+        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -601,10 +614,9 @@
         }
         $(_this._canvas).setTransform(transformNew);
 
-        _this.rotateAngle +=90;
-
         _this.__pushStack('rotateRight');
-        _this.__updateCanvasUI();
+        _this.__setCanvasStyleFit();
+        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -618,10 +630,9 @@
         var transformNew = kUtil.Matrix.dot(new kUtil.Matrix(-1,0,0,1,0,0), transformOri);
         $(_this._canvas).setTransform(transformNew);
 
-        _this.mirrorNum++;
-
         _this.__pushStack('mirror');
-        _this.__updateCanvasUI();
+        _this.__setCanvasStyleFit();
+        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -635,10 +646,9 @@
         var transformNew = kUtil.Matrix.dot(new kUtil.Matrix(1,0,0,-1,0,0), transformOri);
         $(_this._canvas).setTransform(transformNew);
 
-        _this.flipNum++;
-
         _this.__pushStack('flip');
-        _this.__updateCanvasUI();
+        _this.__setCanvasStyleFit();
+        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -647,100 +657,29 @@
     ImageViewer.prototype.Crop = function(){
         var _this = this;
         if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Crop','view'); return false; }
+        var _newCropArea = _this.ImageAreaSelector.__getCropArea();
+        if(_newCropArea.x == 0 && _newCropArea.y == 0 && _newCropArea.width == 1 && _newCropArea.height == 1){ return;}
 
+        _this.__pushStack('Crop');
+
+        _this.__updateCvsInner(false);
+        _this.ImageAreaSelector.ShowCropRect();
+
+        lib.Errors.Sucess(_this);
+        return true;
     }
 
     ImageViewer.prototype.Save = function(){
-        var _this = this;
-        if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Save','view'); return false; }
+         var _this = this;
+         if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Save','view'); return false; }
 
-        var img = _this.aryImageControls[_this.curIndex].objImage;
-        var process = _this.stack[_this.curStep];
-
-        var imgOW = img.naturalWidth || img.width;
-        var imgOH = img.naturalHeight || img.height;
-        var crop = process.crop;
-        var tsf = process.transform;
-        var context2d = _this.ctx;
-        var mainCvs = _this._canvas;
-        var bTrueTransform = true;
-
-        var sWidth = mainCvs.fullQualityWidth = Math.round(imgOW) || 1,
-            sHeight = mainCvs.fullQualityHeight = Math.round(imgOH) || 1;
-        var isSwitchedWH = false;
-        if(0 != tsf.a*tsf.d && 0 == tsf.b*tsf.c){
-            mainCvs.fullQualityWidth = sWidth;
-            mainCvs.fullQualityHeight = sHeight;
-        }else{
-            mainCvs.fullQualityWidth = sHeight;
-            mainCvs.fullQualityHeight = sWidth;
-            if(bTrueTransform){
-                isSwitchedWH = true;
-            }
-        }
-        mainCvs.hasCompressed = false;
-        if(bTrueTransform){
-            var cvsW, cvsH;
-            if(isSwitchedWH){
-                cvsW = sHeight;
-                cvsH = sWidth;
-            }else{
-                cvsW = sWidth;
-                cvsH = sHeight;
-            }
-            mainCvs.width = cvsW;
-            mainCvs.height = cvsH;
-            var drawE = cvsW/2 * (1 - tsf.a - tsf.c),
-                drawF = cvsH/2 * (1 - tsf.b - tsf.d);
-            context2d.setTransform(tsf.a, tsf.b, tsf.c, tsf.d, drawE, drawF);
-        }
-        else if(sWidth > maxEditingCvsWH || sHeight > maxEditingCvsWH){
-            var rate = maxEditingCvsWH / Math.max(sWidth, sHeight);
-            mainCvs.width = Math.round(sWidth * rate) || 1;
-            mainCvs.height = Math.round(sHeight * rate) || 1;
-            mainCvs.hasCompressed = true;
-        }else{
-            mainCvs.width = sWidth;
-            mainCvs.height = sHeight;
-        }
-        var sx = Math.round(imgOW*crop.x), 
-            sy = Math.round(imgOH*crop.y);
-        if(sx == imgOW){ --sx; }
-        if(sy == imgOH){ --sy; }
-        var dWidth, dHeight;
-        if(!isSwitchedWH){
-            dWidth = mainCvs.width;
-            dHeight = mainCvs.height;
-        }else{
-            dWidth = mainCvs.height;
-            dHeight = mainCvs.width;
-        }
-        if(sWidth/dWidth <= 2){
-            context2d.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, dWidth, dHeight);
-        }else{
-            var tempCvs = document.createElement('canvas');
-            tempCvs.width = Math.round(sWidth/2);
-            tempCvs.height = Math.round(sHeight/2);
-            var tempCtx = tempCvs.getContext('2d');
-            var _sWidth, _sHeight, _dWidth = Math.round(sWidth/2), _dHeight = Math.round(sHeight/2);
-            tempCtx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, _dWidth, _dHeight);
-            for(;;){
-                _sWidth = _dWidth, _sHeight = _dHeight, _dWidth = Math.round(_sWidth/2), _dHeight = Math.round(_sHeight/2);
-                if(_dWidth <= dWidth || _dHeight <= dHeight){break;}
-                tempCtx.drawImage(tempCvs, 0, 0, _sWidth, _sHeight, 0, 0, _dWidth, _dHeight);
-            }
-            context2d.drawImage(tempCvs, 0, 0, _sWidth, _sHeight, 0, 0, dWidth, dHeight);
-        }
-        if(bTrueTransform){
-            $(mainCvs).setTransform(new kUtil.Matrix(1,0,0,1,0,0));
-        }else{
-            $(mainCvs).setTransform(tsf);
-        }
+        _this.__updateCvsInner(true);
         
+        _this.CancelEdit(false);
         if(!_this.replaceOriginalImage){
-            _this.LoadImageEx(mainCvs);
+            _this.LoadImageEx(_this._canvas);
         }else{
-            lib.canvasToBlob(mainCvs, function(blob){
+            lib.canvasToBlob(_this._canvas, function(blob){
                 var url = URL.createObjectURL(blob);
                 var curImg = _this.aryImageControls[_this.curIndex];
                 var curThumbImg = _this.aryThumbnailControls[_this.curIndex];
@@ -749,11 +688,10 @@
                 curImg.Refresh();
 
                 curThumbImg.imageUrl = url;
-                curThumbImg.Refresh();               
+                curThumbImg.Refresh();
             });
         }
 
-        _this.CancelEdit();
         return true;
     }
 
@@ -821,45 +759,148 @@
         _this.__reInitThumbnailControlPosition();
     }
 
+    ImageViewer.prototype.__updateCvsInner = function(bTrueTransform){
+        var _this = this;
+        var img = _this.aryImageControls[_this.curIndex].objImage;
+        var imgOW = img.naturalWidth || img.width;
+        var imgOH = img.naturalHeight || img.height;
+        var process = _this.stack[_this.curStep];
+        var crop = process.crop;
+        var tsf = process.transform;
+        var ctx = _this.ctx;
+        var cvs = _this._canvas;
+
+        var sWidth = cvs.fullQualityWidth = Math.round(imgOW * crop.width) || 1,
+            sHeight = cvs.fullQualityHeight = Math.round(imgOH * crop.height) || 1;
+        if(0 != tsf.a*tsf.d && 0 == tsf.b*tsf.c){
+            cvs.fullQualityWidth = sWidth;
+            cvs.fullQualityHeight = sHeight;
+        }else{
+            cvs.fullQualityWidth = sHeight;
+            cvs.fullQualityHeight = sWidth;
+            if(bTrueTransform){
+                _this.isSwitchedWH = true;
+            }
+        }
+        cvs.hasCompressed = false;
+        if(bTrueTransform){
+            var cvsW, cvsH;
+            if(_this.isSwitchedWH){
+                cvsW = sHeight;
+                cvsH = sWidth;
+            }else{
+                cvsW = sWidth;
+                cvsH = sHeight;
+            }
+            cvs.width = cvsW;
+            cvs.height = cvsH;
+            var drawE = cvsW/2 * (1 - tsf.a - tsf.c),
+                drawF = cvsH/2 * (1 - tsf.b - tsf.d);
+            ctx.setTransform(tsf.a, tsf.b, tsf.c, tsf.d, drawE, drawF);
+        }
+        else{
+            cvs.width = sWidth;
+            cvs.height = sHeight;
+        }
+        var sx = Math.round(imgOW*crop.x), 
+            sy = Math.round(imgOH*crop.y);
+        if(sx == imgOW){ --sx; }
+        if(sy == imgOH){ --sy; }
+        var dWidth, dHeight;
+        if(!_this.isSwitchedWH){
+            dWidth = cvs.width;
+            dHeight = cvs.height;
+        }else{
+            dWidth = cvs.height;
+            dHeight = cvs.width;
+        }
+        ctx.clearRect(0,0,dWidth,dHeight);
+        ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, dWidth, dHeight);
+        //if(sWidth/dWidth <= 2){
+            // ctx.clearRect(0,0,dWidth,dHeight);
+            // ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, dWidth, dHeight);
+        //}else{
+            // var tempCvs = document.createElement('canvas');
+            // tempCvs.width = Math.round(sWidth/2);
+            // tempCvs.height = Math.round(sHeight/2);
+            // var tempCtx = tempCvs.getContext('2d');
+            // var _sWidth, _sHeight, _dWidth = Math.round(sWidth/2), _dHeight = Math.round(sHeight/2);
+            // tempCtx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, _dWidth, _dHeight);
+            // for(;;){
+            //     _sWidth = _dWidth, _sHeight = _dHeight, _dWidth = Math.round(_sWidth/2), _dHeight = Math.round(_sHeight/2);
+            //     if(_dWidth <= dWidth || _dHeight <= dHeight){break;}
+            //     tempCtx.drawImage(tempCvs, 0, 0, _sWidth, _sHeight, 0, 0, _dWidth, _dHeight);
+            // }
+            // ctx.drawImage(tempCvs, 0, 0, _sWidth, _sHeight, 0, 0, dWidth, dHeight);
+            // document.body.append(tempCvs);
+        //}
+        if(bTrueTransform){
+            $(cvs).setTransform(new kUtil.Matrix(1,0,0,1,0,0));
+        }else{
+            $(cvs).setTransform(tsf);
+        }
+
+        _this.__setCanvasStyleFit(bTrueTransform);
+    };
+
     ImageViewer.prototype.__updateCanvasUI = function(){
         var _this = this;
-
-        if(_this.mode == 'edit'){
-            _this._canvas.style.display = '';
-            var _curStack = _this.stack[_this.curStep];
-            // 判断旋转了几次：0(奇数次) / 1(偶数次)
-            var rotateTime = Math.abs(_curStack.transform.a);
-
-            _this.__attachImgToCanvas(rotateTime);
-            _this.ImageAreaSelector.ShowCropRect(rotateTime);
-            _curStack.crop = _this.ImageAreaSelector.__getDrawArea();
-        }else if(_this.mode == 'view'){
-            _this._canvas.style.display = 'none';
-            _this.stack = [];
-            _this.curStep = -1;
-            //_this.ctx.clearRect(0,0,_this._canvasArea.width,_this._canvasArea.height);
-            _this._canvasArea = {
-                width: 0,
-                height: 0,
-                left: 0,
-                top: 0
-            };
-            var transformNew = new kUtil.Matrix(1,0,0,1,0,0);
-            $(_this._canvas).setTransform(transformNew);
-            _this.ImageAreaSelector.HideCropRect();
-        }
-        
+      
     }
 
-    ImageViewer.prototype.__attachImgToCanvas = function(rotateTime){
+    ImageViewer.prototype.__setCanvasStyleFit = function(bTrueTransform){
         var _this = this;
+        var ca = _this._canvasArea;
+        var tsf = _this.stack[_this.curStep].transform;
+        if(0 != tsf.a*tsf.d && 0 == tsf.b*tsf.c){
+            _this.isSwitchedWH = false;
+        }else{
+            _this.isSwitchedWH = true;
+        }
+
+        if(_this.isSwitchedWH && !bTrueTransform){
+            var imageAspectRatio = _this._canvas.height/_this._canvas.width;
+        }else{
+            var imageAspectRatio = _this._canvas.width/_this._canvas.height;
+        }
+
+        var imgsDivAspectRatio = _this._imgsDivW/_this._imgsDivH;
+        
+        if(imgsDivAspectRatio>imageAspectRatio){
+            ca.height = _this._imgsDivH;
+            ca.width = imageAspectRatio*_this._imgsDivH;
+        }else{
+            ca.width = _this._imgsDivW;
+            ca.height = ca.width/imageAspectRatio;
+        }
+
+        if(_this.isSwitchedWH && !bTrueTransform){
+            var tempW = ca.width;
+            ca.width = ca.height;
+            ca.height = tempW;
+        }
+
+        ca.left = Math.floor((_this._imgsDivW-ca.width)/2);
+        ca.top = Math.floor((_this._imgsDivH-ca.height)/2);
+
+        _this._canvas.style.left = ca.left + 'px';
+        _this._canvas.style.top = ca.top + 'px';
+        _this._canvas.style.width = ca.width + 'px';
+        _this._canvas.style.height = ca.height + 'px';
+    }
+
+    ImageViewer.prototype.__attachImgToCanvas = function(){
+        var _this = this,
+            ca = _this._canvasArea,
+            cvs = _this._canvas,
+            ctx = _this.ctx;
         if(_this.mode != 'edit') return;
 
+        ctx.clearRect(0, 0, ca.width, ca.height);
         var curImg = _this.aryImageControls[_this.curIndex];
 
-        var canvasAspectRatio = _this._imgsDivW/_this._imgsDivH;
-        
-        if(rotateTime == 1){
+        var imgsDivAspectRatio = _this._imgsDivW/_this._imgsDivH;
+        if(!_this.isSwitchedWH){
             // 旋转偶数次
             var imageAspectRatio = curImg._origImageWidth/curImg._origImageHeight;
         }else{
@@ -867,31 +908,31 @@
             var imageAspectRatio = curImg._origImageHeight/curImg._origImageWidth;
         }
         
-        if(canvasAspectRatio>imageAspectRatio){
-            _this._canvasArea.height = _this._imgsDivH;
-            _this._canvasArea.width = imageAspectRatio*_this._imgsDivH;
+        if(imgsDivAspectRatio>imageAspectRatio){
+            ca.height = _this._imgsDivH;
+            ca.width = imageAspectRatio*_this._imgsDivH;
         }else{
-            _this._canvasArea.width = _this._imgsDivW;
-            _this._canvasArea.height = _this._canvasArea.width/imageAspectRatio;
+            ca.width = _this._imgsDivW;
+            ca.height = ca.width/imageAspectRatio;
         }
 
-        if(rotateTime == 0){
-            var tempW = _this._canvasArea.width;
-            _this._canvasArea.width = _this._canvasArea.height;
-            _this._canvasArea.height = tempW;
+        if(_this.isSwitchedWH){
+            var tempW = ca.width;
+            ca.width = ca.height;
+            ca.height = tempW;
         }
 
-        _this._canvasArea.left = Math.floor((_this._imgsDivW-_this._canvasArea.width)/2);
-        _this._canvasArea.top = Math.floor((_this._imgsDivH-_this._canvasArea.height)/2);
+        ca.left = Math.floor((_this._imgsDivW-ca.width)/2);
+        ca.top = Math.floor((_this._imgsDivH-ca.height)/2);
 
-        _this._canvas.style.left = _this._canvasArea.left + 'px';
-        _this._canvas.style.top = _this._canvasArea.top + 'px';
-        _this._canvas.setAttribute("width",_this._canvasArea.width);
-        _this._canvas.setAttribute("height",_this._canvasArea.height);
+        cvs.style.left = ca.left + 'px';
+        cvs.style.top = ca.top + 'px';
+        // cvs.setAttribute("width",ca.width);
+        // cvs.setAttribute("height",ca.height);
+        cvs.style.width = ca.width + 'px';
+        cvs.style.height = ca.height + 'px';
 
-        var ctx = _this._canvas.getContext("2d");
-        ctx.clearRect(0, 0, _this._canvasArea.width, _this._canvasArea.height);
-        ctx.drawImage(_this.aryImageControls[_this.curIndex].objImage, 0, 0, _this._canvasArea.width, _this._canvasArea.height);
+        ctx.drawImage(_this.aryImageControls[_this.curIndex].objImage, 0, 0, ca.width, ca.height);
     }
 
     ImageViewer.prototype._addImgToContainer = function (objImg) {
@@ -928,20 +969,6 @@
         }
     };
 
-    // ImageViewer.prototype.__recalculateDivThumbnailSize = function () {
-    //     var _this = this;
-    //     var aryThumbnailControls = _this.aryThumbnailControls;
-    //     var _newWidth = _this.ThumbnailImageMargin;
-    //     for(var i=0;i<aryThumbnailControls.length;i++){
-    //         _newWidth += aryThumbnailControls[i].GetControlWidth() + _this.ThumbnailImageMargin;
-    //     }
-    //     _this._thumbnailsDiv.style.width = (_newWidth>_this._thumbnailContainerW?_newWidth:_this.imageViewWidth) + 'px';
-
-    //     _this._thumbnailContainer.scrollLeft = _this._thumbnailContainer.scrollWidth;
-
-    //     return true;
-    // }
-
     ImageViewer.prototype.__reInitImageControlPosition = function () {
         var _this = this;
         
@@ -952,6 +979,7 @@
 
         for(var i=0;i<_aryImgs.length;i++){
             if(i == _curIndex){
+                _aryImgs[_curIndex].SetVisible(true);
                 _aryImgs[_curIndex].SetLocation();
             }else if(i==_pIndex){
                 _aryImgs[_pIndex].SetLocation(-_this._imgContainerW);
@@ -1010,11 +1038,21 @@
 
     };
 
+    ImageViewer.prototype.__setCanvasVisible = function(v){
+        var _this = this;
+        if(v){
+            _this._canvas.style.display = '';
+        }else{
+            _this._canvas.style.display = 'none';
+        }
+    }
+
     ImageViewer.prototype.__pushStack = function(funName){
         var _this = this;
         var _curStack = {
             fun: funName,
-            crop: _this.ImageAreaSelector.__getDrawArea(),
+            crop: _this.__getFinalCropArea(),
+            //draw: _this.ImageAreaSelector.__getDrawArea(),
             transform: $(_this._canvas).getTransform(),
             srcBlob: _this.aryImageControls[_this.curIndex].imageUrl
         };
@@ -1022,6 +1060,24 @@
         _this.stack.push(_curStack);
         _this.curStep++;
         return true;
+    }
+
+    ImageViewer.prototype.__getFinalCropArea = function(){
+        var _this = this,
+            _curCropArea = _this.stack[_this.curStep].crop,
+            _newCropArea = _this.ImageAreaSelector.__getCropArea();
+
+        var _finalX = _curCropArea.x>0?(_newCropArea.x>0?_curCropArea.x+(1-_curCropArea.x)*_newCropArea.x:_curCropArea.x):(_newCropArea.x>0?_newCropArea.x:0);
+        var _finalY = _curCropArea.y>0?(_newCropArea.y>0?_curCropArea.y+(1-_curCropArea.y)*_newCropArea.y:_curCropArea.y):(_newCropArea.y>0?_newCropArea.y:0);
+        var _finalW = _curCropArea.width>0?(_newCropArea.width>0?_curCropArea.width*_newCropArea.width:_curCropArea.width):(_newCropArea.width>0?_newCropArea.width:0);
+        var _finalH = _curCropArea.height>0?(_newCropArea.height>0?_curCropArea.height*_newCropArea.height:_curCropArea.height):(_newCropArea.height>0?_newCropArea.height:0);
+        var _finalCropArea = {
+            x: _finalX,
+            y: _finalY,
+            width: _finalW,
+            height: _finalH
+        }
+        return _finalCropArea;
     }
 
     ImageViewer.prototype.onNumChange = null;

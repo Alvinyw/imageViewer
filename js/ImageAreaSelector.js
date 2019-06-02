@@ -92,10 +92,10 @@
 
         // 画布实时的裁切信息：相对于伸缩后的图片
         _this.drawArea = {
-            width: 0,
-            height: 0,
             x: 0,
-            y: 0
+            y: 0,
+            width: 0,
+            height: 0
         };
 
         // 实际的裁切信息：相对于原图
@@ -110,11 +110,7 @@
 
         // 给控件四条边和四个角添加响应点击事件
         for(var i=0;i<4;i++){
-            lib.addEvent(_this.kPainterCorners[i],"mousedown", fuc_touchstart);
-            lib.addEvent(_this.kPainterCorners[i],"touchstart", fuc_touchstart);
-
-            lib.addEvent(_this.kPainterEdges[i],"mousedown", fuc_touchstart);
-            lib.addEvent(_this.kPainterEdges[i],"touchstart", fuc_touchstart);
+            lib.addEvent([_this.kPainterCorners[i],_this.kPainterEdges[i]],"mousedown touchstart", fuc_touchstart);
         }
 
         function fuc_touchstart(event){
@@ -123,13 +119,8 @@
 
             _this.dragging = true;
 
-            lib.addEvent(_this.container,"mousemove", fuc_touchmove);
-            lib.addEvent(_this.container,"mouseleave", fuc_touchend);
-            lib.addEvent(_this.container,"mouseup", fuc_touchend);
-
-            lib.addEvent(_this.container,"touchmove", fuc_touchmove);
-            lib.addEvent(_this.container,"touchend", fuc_touchend);
-
+            lib.addEvent(_this.container,"mousemove touchmove", fuc_touchmove);
+            lib.addEvent(_this.container,"mouseleave mouseup touchend", fuc_touchend);
 
             var touches = ev.changedTouches;
 
@@ -245,12 +236,8 @@
             if(!_this.dragging) return;
             _this.dragging = false;
 
-            lib.removeEvent(_this.container,"mousemove", fuc_touchmove);
-            lib.removeEvent(_this.container,"mouseleave", fuc_touchend);
-            lib.removeEvent(_this.container,"mouseup", fuc_touchend);
-
-            lib.removeEvent(_this.container,"touchmove", fuc_touchmove);
-            lib.removeEvent(_this.container,"touchend", fuc_touchend);
+            lib.removeEvent(_this.container,"mousemove touchmove", fuc_touchmove);
+            lib.removeEvent(_this.container,"mouseleave mouseup touchend", fuc_touchend);
         }
     }
 
@@ -267,18 +254,16 @@
         return true;
     }
 
-    ImageAreaSelector.prototype.ShowCropRect = function(rotateTime){
+    ImageAreaSelector.prototype.ShowCropRect = function(){
         var _this = this;
         if(_this.viewer.mode != 'edit') return;
         _this.isCropRectShowing = true;
         _this.SetVisible(true);
 
-        if(rotateTime == 1){
-            // rotate 次数为偶数
+        if(!_this.viewer.isSwitchedWH){
             _this.maxWidth = _this.viewer._canvasArea.width;
             _this.maxHeight = _this.viewer._canvasArea.height;
         }else{
-            // rotate 次数为奇数
             _this.maxWidth = _this.viewer._canvasArea.height;
             _this.maxHeight = _this.viewer._canvasArea.width;
         }
@@ -289,19 +274,12 @@
         return true;
     }
 
-    ImageAreaSelector.prototype.__getDrawArea = function(){
+    ImageAreaSelector.prototype.HideCropRect = function(){
         var _this = this;
-        var curDrawRect = {
-            width: _this.drawArea.width,
-            height: _this.drawArea.height,
-            x: _this.drawArea.x,
-            y: _this.drawArea.y
-        };
-        return curDrawRect;
-    }
+        _this.isCropRectShowing = false;
+        _this.SetVisible(false);
 
-    ImageAreaSelector.prototype.__getCropArea = function(){
-        var _this = this;
+        return true;
     }
 
     ImageAreaSelector.prototype.__updateDrawArea = function(w,h,x,y) {
@@ -327,12 +305,40 @@
         return true;
     }
 
-    ImageAreaSelector.prototype.HideCropRect = function(){
+    ImageAreaSelector.prototype.__getDrawArea = function(){
         var _this = this;
-        _this.isCropRectShowing = false;
-        _this.SetVisible(false);
+        var curDrawRect = {
+            width: _this.drawArea.width,
+            height: _this.drawArea.height,
+            x: _this.drawArea.x,
+            y: _this.drawArea.y
+        };
+        return curDrawRect;
+    }
 
-        return true;
+    ImageAreaSelector.prototype.__getCropArea = function(){
+        var _this = this,curDrawRect,
+             _x = _this.drawArea.x / _this.maxWidth,
+            _y = _this.drawArea.y / _this.maxHeight,
+            _w = _this.drawArea.width / _this.maxWidth,
+            _h = _this.drawArea.height / _this.maxHeight;
+        if(_this.viewer.isSwitchedWH){
+            curDrawRect = {
+                x: _y,
+                y: _x,
+                width: _h,
+                height: _w
+            }
+        }else{
+            curDrawRect = {
+                x: _x,
+                y: _y,
+                width: _w,
+                height: _h
+            }
+        }
+        _this.cropArea = curDrawRect;
+        return curDrawRect;
     }
 
     ML.ImageAreaSelector = ImageAreaSelector;
