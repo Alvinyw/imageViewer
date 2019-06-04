@@ -1,9 +1,7 @@
-(function (ML) {
-
+(function (DL,MBC) {
 	"use strict";
+	var lib = DL;
 
-	var lib = ML;
-	
 	function ImageControl(cfg) {
 		var _this = this;
 
@@ -164,7 +162,6 @@
 		}
 
 		_this.__fitImage();
-		_this.SetVisible(true);
 		return true;
 	};
 
@@ -230,6 +227,7 @@
 			_this.divOut.appendChild(_this.objImage);
 
 			_this.Show();
+			_this.SetVisible(true);
 		};
 
 		newImage.onerror = function (e) {
@@ -238,6 +236,6 @@
 		return true;
 	};
 
-	ML.ImageControl = ImageControl;
+	MBC.ImageControl = ImageControl;
 
-})(MBC.Lib);
+})(Dynamsoft.MBC.Lib, Dynamsoft.MBC);

@@ -3,8 +3,7 @@ var cfg = {
 	Width:'100%', 
 	Height:'97%'
 }
-
-var imageViewer = new MBC.Lib.ImageViewer(cfg);
+var imageViewer = new Dynamsoft.MBC.ImageViewer(cfg);
 
 imageViewer.onNumChange = function(curIndex,imgCount){
     var _curIndex = parseInt(curIndex)+1;
@@ -76,20 +75,24 @@ function fuc_showVideo(){
     imageViewer.ShowVideo();
 }
 
-function fuc_enterEdit(){
+function fuc_ShowImageEditor(){
 	if(!imageViewer){return false;}
-    imageViewer.EnterEdit();
+    var ret = imageViewer.ShowImageEditor();
 
-    $(".visible_inEdit").show();
-    $(".visible_inView").hide();
+    if(ret){
+        $(".visible_inEdit").show();
+        $(".visible_inView").hide();
+    }
 }
 
-function fuc_cancelEdit(){
+function fuc_CloseImageEditor(){
 	if(!imageViewer){return false;}
-    imageViewer.CancelEdit();
+    var ret = imageViewer.CloseImageEditor();
 
-    $(".visible_inEdit").hide();
-    $(".visible_inView").show();
+    if(ret){
+        $(".visible_inEdit").hide();
+        $(".visible_inView").show();
+    }
 }
 
 function fuc_rotateLeft(){
@@ -128,6 +131,16 @@ function fuc_Save(){
 
     $(".visible_inEdit").hide();
     $(".visible_inView").show();
+}
+
+function fuc_Undo(){
+    if(!imageViewer){return false;}
+    imageViewer.Undo();
+}
+
+function fuc_Redo(){
+    if(!imageViewer){return false;}
+    imageViewer.Redo();
 }
 
 imageViewer._defaultFileInput.accept += ',image/tiff,application/pdf';

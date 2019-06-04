@@ -1,9 +1,6 @@
-(function (ML) {
-
+(function (DL,MBC) {
     "use strict";
-    
-    var lib = ML;
-
+    var lib = DL;
     function ImageAreaSelector(cfg){
         var _this = this;
         var containerDiv = [
@@ -305,42 +302,23 @@
         return true;
     }
 
-    ImageAreaSelector.prototype.__getDrawArea = function(){
-        var _this = this;
-        var curDrawRect = {
-            width: _this.drawArea.width,
-            height: _this.drawArea.height,
-            x: _this.drawArea.x,
-            y: _this.drawArea.y
-        };
-        return curDrawRect;
-    }
-
     ImageAreaSelector.prototype.__getCropArea = function(){
-        var _this = this,curDrawRect,
+        var _this = this,curCropRect,
              _x = _this.drawArea.x / _this.maxWidth,
             _y = _this.drawArea.y / _this.maxHeight,
             _w = _this.drawArea.width / _this.maxWidth,
             _h = _this.drawArea.height / _this.maxHeight;
-        if(_this.viewer.isSwitchedWH){
-            curDrawRect = {
-                x: _y,
-                y: _x,
-                width: _h,
-                height: _w
-            }
-        }else{
-            curDrawRect = {
-                x: _x,
-                y: _y,
-                width: _w,
-                height: _h
-            }
+
+        curCropRect = {
+            x: _x,
+            y: _y,
+            width: _w,
+            height: _h
         }
-        _this.cropArea = curDrawRect;
-        return curDrawRect;
+        _this.cropArea = curCropRect;
+        return curCropRect;
     }
 
-    ML.ImageAreaSelector = ImageAreaSelector;
+    MBC.ImageAreaSelector = ImageAreaSelector;
 
-})(MBC.Lib);
+})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);

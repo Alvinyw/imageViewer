@@ -1,9 +1,6 @@
-(function (ML) {
-
+(function (DL,MBC) {
     "use strict";
-    
-    var lib = ML;
-
+    var lib = DL;
     function ImageViewer(cfg){
         var _this = this;
         var containerDiv = [
@@ -203,12 +200,12 @@
         cfg.videoSettings = _this.videoSettings;
         cfg.container = _this._imgContainer;
 
-        _this.VideoViewer = new ML.VideoViewer(cfg);
-        _this.ImageAreaSelector = new ML.ImageAreaSelector(cfg);
+        _this.VideoViewer = new MBC.VideoViewer(cfg);
+        _this.ImageAreaSelector = new MBC.ImageAreaSelector(cfg);
 
         lib.attachProperty(_this);
         // 设置  ImageViewer 里的元素宽高
-        _this.__init(cfg);
+        _this.__init();
     }
 
     ImageViewer.prototype.beforeAddImgFromFileChooseWindow = null;
@@ -237,13 +234,6 @@
         _this.thumbnailImagesPerRow = Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH)>2?Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH):3;
 
         _this._thumbnailsDiv.style.height = _this._thumbnailContainerH + 'px';
-
-        _this.maxEditingCvsWH;
-        (function(){
-            var dpr = window.devicePixelRatio || 1;
-            var w = screen.width, h = screen.height;
-            _this.maxEditingCvsWH = Math.min(w,h)*dpr;
-        })();
     }
 
     ImageViewer.prototype.AdaptiveLayout = function () {
@@ -267,7 +257,9 @@
         _this.__reInitThumbnailControlPosition();
 
         // 重置 canvas 控件的宽高和位置
-        _this.__updateCanvasUI();
+        if(_this.mode == 'edit'){
+            _this.__setCanvasStyleFit();
+        }
 
         return true;
     }
@@ -313,17 +305,18 @@
         }   
         
         // 添加 ImageControl 
-        var objImageControl = new ML.ImageControl(cfg);
+        var objImageControl = new MBC.ImageControl(cfg);
         _this.aryImageControls.push(objImageControl);
-        _this._addImgToContainer(objImageControl.GetEL());
+        _this.__addImgToContainer(objImageControl.GetEL());
 
         // 添加 ThumbnailControl 
-        var objThumbnailControl = new ML.ThumbnailControl(cfg);
+        var objThumbnailControl = new MBC.ThumbnailControl(cfg);
         _this.aryThumbnailControls.push(objThumbnailControl);
-        _this._addImgToThumbnail(objThumbnailControl.GetEL());
+        _this.__addImgToThumbnail(objThumbnailControl.GetEL());
 
         _this.__resetSelection();
 
+        _this._updateNumUI();
         lib.Errors.Sucess(_this);
         return true;
     }
@@ -521,13 +514,14 @@
         }
     };
 
-    ImageViewer.prototype.EnterEdit = function(){
+    ImageViewer.prototype.ShowImageEditor = function(){
         var _this = this;
-        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'EnterEdit','edit'); return false;
+        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'ShowImageEditor','edit'); return false;
         }else if(_this.curIndex < 0){ lib.Errors.IndexOutOfRange(_this); return false; }
         _this.mode = 'edit';
 
-        _this.aryImageControls[_this.curIndex].SetVisible(false);
+        var curImg = _this.aryImageControls[_this.curIndex];
+        curImg.SetVisible(false);
         _this.__setCanvasVisible(true);
         _this.ctx.clearRect(0,0,_this._canvasArea.width,_this._canvasArea.height);
         _this._canvasArea = {
@@ -539,24 +533,24 @@
         var transformNew = new kUtil.Matrix(1,0,0,1,0,0);
         $(_this._canvas).setTransform(transformNew);
         var _curStack = {
-            fun: 'enterEdit',
+            fun: 'ShowImageEditor',
             crop: {x: 0, y: 0, width: 1, height: 1},
-            draw: {x: 0, y: 0, width: 0, height: 0},
+            draw: {x: 0, y: 0, width: curImg._origImageWidth, height: curImg._origImageHeight},
             transform: new kUtil.Matrix(1,0,0,1,0,0),
-            srcBlob: _this.aryImageControls[_this.curIndex].imageUrl
+            srcBlob: curImg.imageUrl
         };
         _this.stack.push(_curStack);
         _this.curStep++;
 
-        _this.__updateCvsInner(false);
-        _this.ImageAreaSelector.ShowCropRect();
+        _this.__updateCanvasInner(false);
 
         lib.Errors.Sucess(_this);
         return true;
     };
 
-    ImageViewer.prototype.CancelEdit = function(bShowImg){
+    ImageViewer.prototype.CloseImageEditor = function(bShowImg){
         var _this = this;
+        if(_this.mode == 'view'){ lib.Errors.FucNotValidInThisMode(_this,'CloseImageEditor','view'); return false;}
         _this.mode = 'view';
         var _bShowImg = (bShowImg == false)?false:true;
 
@@ -581,7 +575,6 @@
         
         _this.__pushStack('rotateLeft');
         _this.__setCanvasStyleFit();
-        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -597,7 +590,6 @@
 
         _this.__pushStack('rotateRight');
         _this.__setCanvasStyleFit();
-        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -616,7 +608,6 @@
 
         _this.__pushStack('rotateRight');
         _this.__setCanvasStyleFit();
-        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -632,7 +623,6 @@
 
         _this.__pushStack('mirror');
         _this.__setCanvasStyleFit();
-        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -648,7 +638,6 @@
 
         _this.__pushStack('flip');
         _this.__setCanvasStyleFit();
-        _this.ImageAreaSelector.ShowCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -662,8 +651,7 @@
 
         _this.__pushStack('Crop');
 
-        _this.__updateCvsInner(false);
-        _this.ImageAreaSelector.ShowCropRect();
+        _this.__updateCanvasInner(false);
 
         lib.Errors.Sucess(_this);
         return true;
@@ -673,9 +661,9 @@
          var _this = this;
          if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Save','view'); return false; }
 
-        _this.__updateCvsInner(true);
+        _this.__updateCanvasInner(true);
         
-        _this.CancelEdit(false);
+        _this.CloseImageEditor(false);
         if(!_this.replaceOriginalImage){
             _this.LoadImageEx(_this._canvas);
         }else{
@@ -691,8 +679,27 @@
                 curThumbImg.Refresh();
             });
         }
-
         return true;
+    }
+
+    ImageViewer.prototype.Undo = function(){
+        var _this = this;
+        if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Undo','view'); return false; }
+        if(_this.curStep > 0){
+            var toStep = _this.curStep - 1;
+            while(null == _this.stack[toStep]){--toStep;}
+            _this.__fromToStepAsync(_this.curStep, toStep);
+        }
+    }
+
+    ImageViewer.prototype.Redo = function(){
+        var _this = this;
+        if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Redo','view'); return false; }
+        if(_this.curStep < _this.stack.length - 1){
+            var toStep = _this.curStep + 1;
+            while(null == _this.stack[toStep]){++toStep;}
+            _this.__fromToStepAsync(_this.curStep, toStep);
+        }
     }
 
     ImageViewer.prototype.RemoveAllSelectedImages = function(){
@@ -759,7 +766,7 @@
         _this.__reInitThumbnailControlPosition();
     }
 
-    ImageViewer.prototype.__updateCvsInner = function(bTrueTransform){
+    ImageViewer.prototype.__updateCanvasInner = function(bTrueTransform){
         var _this = this;
         var img = _this.aryImageControls[_this.curIndex].objImage;
         var imgOW = img.naturalWidth || img.width;
@@ -782,6 +789,7 @@
                 _this.isSwitchedWH = true;
             }
         }
+        $(cvs).setTransform(new kUtil.Matrix(1,0,0,1,0,0));
         cvs.hasCompressed = false;
         if(bTrueTransform){
             var cvsW, cvsH;
@@ -807,33 +815,15 @@
         if(sx == imgOW){ --sx; }
         if(sy == imgOH){ --sy; }
         var dWidth, dHeight;
-        if(!_this.isSwitchedWH){
-            dWidth = cvs.width;
-            dHeight = cvs.height;
-        }else{
+        if(_this.isSwitchedWH && bTrueTransform){
             dWidth = cvs.height;
             dHeight = cvs.width;
+        }else{
+            dWidth = cvs.width;
+            dHeight = cvs.height;
         }
         ctx.clearRect(0,0,dWidth,dHeight);
         ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, dWidth, dHeight);
-        //if(sWidth/dWidth <= 2){
-            // ctx.clearRect(0,0,dWidth,dHeight);
-            // ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, dWidth, dHeight);
-        //}else{
-            // var tempCvs = document.createElement('canvas');
-            // tempCvs.width = Math.round(sWidth/2);
-            // tempCvs.height = Math.round(sHeight/2);
-            // var tempCtx = tempCvs.getContext('2d');
-            // var _sWidth, _sHeight, _dWidth = Math.round(sWidth/2), _dHeight = Math.round(sHeight/2);
-            // tempCtx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, _dWidth, _dHeight);
-            // for(;;){
-            //     _sWidth = _dWidth, _sHeight = _dHeight, _dWidth = Math.round(_sWidth/2), _dHeight = Math.round(_sHeight/2);
-            //     if(_dWidth <= dWidth || _dHeight <= dHeight){break;}
-            //     tempCtx.drawImage(tempCvs, 0, 0, _sWidth, _sHeight, 0, 0, _dWidth, _dHeight);
-            // }
-            // ctx.drawImage(tempCvs, 0, 0, _sWidth, _sHeight, 0, 0, dWidth, dHeight);
-            // document.body.append(tempCvs);
-        //}
         if(bTrueTransform){
             $(cvs).setTransform(new kUtil.Matrix(1,0,0,1,0,0));
         }else{
@@ -843,10 +833,25 @@
         _this.__setCanvasStyleFit(bTrueTransform);
     };
 
-    ImageViewer.prototype.__updateCanvasUI = function(){
+    ImageViewer.prototype.__fromToStepAsync = function(fromStep, toStep, callback){
         var _this = this;
-      
-    }
+        _this.curStep = toStep;
+        var _crop = _this.stack[fromStep].crop;
+        var crop = _this.stack[_this.curStep].crop;
+        if(_crop.x == crop.x && 
+            _crop.y == crop.y && 
+            _crop.width == crop.width && 
+            _crop.bottom == crop.bottom &&
+            _this.stack[fromStep].srcBlob == _this.stack[_this.curStep].srcBlob
+        ){
+            // case only do transform, don't redraw mainCvs
+            $(_this._canvas).setTransform(_this.stack[_this.curStep].transform.dot(_this.stack[fromStep].transform.inversion()).dot($(_this._canvas).getTransform()));
+            _this.__setCanvasStyleFit();
+            if(callback){callback();}
+        }else{
+            _this.__updateCanvasInner(false);
+        }
+    };
 
     ImageViewer.prototype.__setCanvasStyleFit = function(bTrueTransform){
         var _this = this;
@@ -887,55 +892,11 @@
         _this._canvas.style.top = ca.top + 'px';
         _this._canvas.style.width = ca.width + 'px';
         _this._canvas.style.height = ca.height + 'px';
+
+        _this.ImageAreaSelector.ShowCropRect();
     }
 
-    ImageViewer.prototype.__attachImgToCanvas = function(){
-        var _this = this,
-            ca = _this._canvasArea,
-            cvs = _this._canvas,
-            ctx = _this.ctx;
-        if(_this.mode != 'edit') return;
-
-        ctx.clearRect(0, 0, ca.width, ca.height);
-        var curImg = _this.aryImageControls[_this.curIndex];
-
-        var imgsDivAspectRatio = _this._imgsDivW/_this._imgsDivH;
-        if(!_this.isSwitchedWH){
-            // 旋转偶数次
-            var imageAspectRatio = curImg._origImageWidth/curImg._origImageHeight;
-        }else{
-            // 旋转奇数次
-            var imageAspectRatio = curImg._origImageHeight/curImg._origImageWidth;
-        }
-        
-        if(imgsDivAspectRatio>imageAspectRatio){
-            ca.height = _this._imgsDivH;
-            ca.width = imageAspectRatio*_this._imgsDivH;
-        }else{
-            ca.width = _this._imgsDivW;
-            ca.height = ca.width/imageAspectRatio;
-        }
-
-        if(_this.isSwitchedWH){
-            var tempW = ca.width;
-            ca.width = ca.height;
-            ca.height = tempW;
-        }
-
-        ca.left = Math.floor((_this._imgsDivW-ca.width)/2);
-        ca.top = Math.floor((_this._imgsDivH-ca.height)/2);
-
-        cvs.style.left = ca.left + 'px';
-        cvs.style.top = ca.top + 'px';
-        // cvs.setAttribute("width",ca.width);
-        // cvs.setAttribute("height",ca.height);
-        cvs.style.width = ca.width + 'px';
-        cvs.style.height = ca.height + 'px';
-
-        ctx.drawImage(_this.aryImageControls[_this.curIndex].objImage, 0, 0, ca.width, ca.height);
-    }
-
-    ImageViewer.prototype._addImgToContainer = function (objImg) {
+    ImageViewer.prototype.__addImgToContainer = function (objImg) {
         var _this = this;
 
         _this._imgsDiv.appendChild(objImg);
@@ -944,7 +905,7 @@
         return true;
     }
 
-    ImageViewer.prototype._addImgToThumbnail = function (objThumb) {
+    ImageViewer.prototype.__addImgToThumbnail = function (objThumb) {
         var _this = this;
 
         _this._thumbnailsDiv.appendChild(objThumb);
@@ -1051,8 +1012,8 @@
         var _this = this;
         var _curStack = {
             fun: funName,
-            crop: _this.__getFinalCropArea(),
-            //draw: _this.ImageAreaSelector.__getDrawArea(),
+            crop: _this.__getFinalCropArea()[0],
+            draw: _this.__getFinalCropArea()[1],
             transform: $(_this._canvas).getTransform(),
             srcBlob: _this.aryImageControls[_this.curIndex].imageUrl
         };
@@ -1064,20 +1025,67 @@
 
     ImageViewer.prototype.__getFinalCropArea = function(){
         var _this = this,
-            _curCropArea = _this.stack[_this.curStep].crop,
-            _newCropArea = _this.ImageAreaSelector.__getCropArea();
-
-        var _finalX = _curCropArea.x>0?(_newCropArea.x>0?_curCropArea.x+(1-_curCropArea.x)*_newCropArea.x:_curCropArea.x):(_newCropArea.x>0?_newCropArea.x:0);
-        var _finalY = _curCropArea.y>0?(_newCropArea.y>0?_curCropArea.y+(1-_curCropArea.y)*_newCropArea.y:_curCropArea.y):(_newCropArea.y>0?_newCropArea.y:0);
-        var _finalW = _curCropArea.width>0?(_newCropArea.width>0?_curCropArea.width*_newCropArea.width:_curCropArea.width):(_newCropArea.width>0?_newCropArea.width:0);
-        var _finalH = _curCropArea.height>0?(_newCropArea.height>0?_curCropArea.height*_newCropArea.height:_curCropArea.height):(_newCropArea.height>0?_newCropArea.height:0);
-        var _finalCropArea = {
-            x: _finalX,
-            y: _finalY,
-            width: _finalW,
-            height: _finalH
+            img = _this.aryImageControls[_this.curIndex].objImage,
+            imgOW = img.naturalWidth || img.width,
+            imgOH = img.naturalHeight || img.height,
+            curStack = _this.stack[_this.curStep],
+            curCrop = curStack.crop,
+            curTsf = curStack.transform,
+            newCrop = _this.ImageAreaSelector.__getCropArea(),
+            finalCrop = {
+                x: curCrop.x,
+                y: curCrop.y,
+                width: curCrop.width,
+                height: curCrop.height
+            };
+  
+        if(0 != curTsf.a*curTsf.d && 0 == curTsf.b*curTsf.c){
+            if(newCrop){
+                if(1 == curTsf.a){
+                    finalCrop.x += newCrop.x * curCrop.width;
+                }else{
+                    finalCrop.x += (1 - newCrop.x - newCrop.width) * curCrop.width;
+                }
+                if(1 == curTsf.d){
+                    finalCrop.y += newCrop.y * curCrop.height;
+                }else{
+                    finalCrop.y += (1 - newCrop.y - newCrop.height) * curCrop.height;
+                }
+                finalCrop.width *= newCrop.width;
+                finalCrop.height *= newCrop.height;
+            }
+        }else{
+            if(newCrop){
+                if(1 == curTsf.b){
+                    finalCrop.x += newCrop.y * curCrop.width;
+                }else{
+                    finalCrop.x += (1 - newCrop.y - newCrop.height) * curCrop.width;
+                }
+                if(1 == curTsf.c){
+                    finalCrop.y += newCrop.x * curCrop.height;
+                }else{
+                    finalCrop.y += (1 - newCrop.x - newCrop.width) * curCrop.height;
+                }
+                finalCrop.width *= newCrop.height;
+                finalCrop.height *= newCrop.width;
+            }
         }
-        return _finalCropArea;
+        // set proper accuracy
+        var img = _this.aryImageControls[_this.curIndex];
+        var accuracy = Math.pow(10, Math.ceil(Math.max(img._origImageWidth, img._origImageHeight)).toString().length+2);
+        finalCrop.x = Math.round(finalCrop.x*accuracy)/accuracy;
+        finalCrop.y = Math.round(finalCrop.y*accuracy)/accuracy;
+        finalCrop.width = Math.round(finalCrop.width*accuracy)/accuracy;
+        finalCrop.height = Math.round(finalCrop.height*accuracy)/accuracy;
+
+        var finalDraw = {
+            x: finalCrop.x*imgOW,
+            y: finalCrop.y*imgOH,
+            width: finalCrop.width*imgOW,
+            height: finalCrop.height*imgOH
+        }
+      
+        return [finalCrop,finalDraw];
     }
 
     ImageViewer.prototype.onNumChange = null;
@@ -1085,6 +1093,6 @@
         lib.doCallbackNoBreak(this.onNumChange,[this.curIndex, this.aryImageControls.length]);
     }
 
-    ML.ImageViewer = ImageViewer;
+    MBC.ImageViewer = ImageViewer;
 
-})(MBC.Lib);
+})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);

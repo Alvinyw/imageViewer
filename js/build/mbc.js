@@ -1126,8 +1126,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
 }.call(this));
 
-(function (ML) {
-	var lib = ML || {};
+(function (Dynamsoft) {
+	if (!Dynamsoft.MBC)
+		Dynamsoft.MBC = {};
+
+	var lib = Dynamsoft.MBC.Lib = {};
 
 	lib.getElDimensions = function (el) {
 		var displayFormat, elDimensions;
@@ -1164,7 +1167,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 			var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');  
 			obj.className = obj.className.replace(reg, ' ');  
 		}  
-	};  
+	}; 
+
+	lib.toggleClass = function(obj,cls){  
+	    if(this.hasClass(obj,cls)){  
+	        this.removeClass(obj,cls);  
+	    }else{  
+	        this.addClass(obj,cls);  
+	    }  
+	};
 
 	lib.isNumber = function (val) {
 		if(val === "" || val ==null){
@@ -1259,14 +1270,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
         return result;
 	};
-
-	// lib.toggleClass = function(obj,cls){  
-	//     if(this.hasClass(obj,cls)){  
-	//         this.removeClass(obj,cls);  
-	//     }else{  
-	//         this.addClass(obj,cls);  
-	//     }  
-	// };
 
 	lib.doCallbackNoBreak = function(callback, paras){
 		if(callback){
@@ -1390,128 +1393,153 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 	};
 
-
 	lib.addEvent = function(obj,type,handle){
-	obj.addEventListener ? obj.addEventListener(type,handle,false) : obj.attachEvent("on"+type,handle);
+		var typeAry = type.split(' ');
+		if(!obj.length){
+			for(var j=0;j<typeAry.length;j++){
+				obj.addEventListener ? obj.addEventListener(typeAry[j],handle,false) : obj.attachEvent("on"+typeAry[j],handle);
+			}
+		}else{
+			for(var i=0;i<obj.length;i++){
+				for(var j=0;j<typeAry.length;j++){
+					obj[i].addEventListener ? obj[i].addEventListener(typeAry[j],handle,false) : obj[i].attachEvent("on"+typeAry[j],handle);
+				}
+			}
+		}
 	};
 
 	lib.removeEvent = function(obj,type,handle){
-	obj.removeEventListener ? obj.removeEventListener(type,handle,false) : obj.detachEvent("on"+type,handle); 
+		var typeAry = type.split(' ');
+		if(!obj.length){
+			for(var j=0;j<typeAry.length;j++){
+				obj.removeEventListener ? obj.removeEventListener(typeAry[j],handle,false) : obj.detachEvent("on"+typeAry[j],handle);
+			}
+		}else{
+			for(var i=0;i<obj.length;i++){
+				for(var j=0;j<typeAry.length;j++){
+					obj[i].removeEventListener ? obj[i].removeEventListener(typeAry[j],handle,false) : obj[i].detachEvent("on"+typeAry[j],handle);
+				}
+			}
+		}
 	};
 
 	lib.stopDefault = function(e){
-	if ( e && e.preventDefault ){ 
-		e.preventDefault();
-	} else { 
-		window.event.returnValue = false;
-	}
+		if ( e && e.preventDefault ){ 
+			e.preventDefault();
+		} else { 
+			window.event.returnValue = false;
+		}
 	};
 
 	lib._querySelectorAll = function(element, selector){
-	var idAllocator = 10000;
-	if (element.querySelectorAll){
-		return element.querySelectorAll(selector);
-	}else {
-		var needsID = element.id === "";
-		if (needsID) {
-			++idAllocator;
-			element.id = "__qsa" + idAllocator;
-		}
-		try {
-			return document.querySelectorAll("#" + element.id + " " + selector);
-		}
-		finally {
+		var idAllocator = 10000;
+		if (element.querySelectorAll){
+			return element.querySelectorAll(selector);
+		}else {
+			var needsID = element.id === "";
 			if (needsID) {
-				element.id = "";
+				++idAllocator;
+				element.id = "__qsa" + idAllocator;
+			}
+			try {
+				return document.querySelectorAll("#" + element.id + " " + selector);
+			}
+			finally {
+				if (needsID) {
+					element.id = "";
+				}
 			}
 		}
-	}
 	};
 
 	lib.fireEvent = function (name, el) {
-	var event;
-	if (document.createEvent) {
-		event = document.createEvent('HTMLEvents');
-		event.initEvent(name, true, true);
+		var event;
+		if (document.createEvent) {
+			event = document.createEvent('HTMLEvents');
+			event.initEvent(name, true, true);
 
-		if (el.dispatchEvent)
-			el.dispatchEvent(event);
-	}
-	else if (document.createEventObject) {
-		event = document.createEventObject();
-		event.bubbles = true;
-		event.cancelable = true;
-		el.fireEvent(name, event);
-	}
-	else {
-		event = new Event(name);
-		if (el.dispatchEvent)
-			el.dispatchEvent(event);
-	}
+			if (el.dispatchEvent)
+				el.dispatchEvent(event);
+		}
+		else if (document.createEventObject) {
+			event = document.createEventObject();
+			event.bubbles = true;
+			event.cancelable = true;
+			el.fireEvent(name, event);
+		}
+		else {
+			event = new Event(name);
+			if (el.dispatchEvent)
+				el.dispatchEvent(event);
+		}
 	}
 
 	//indexOf() do not compatible with IE6-8
 	if(!Array.prototype.indexOf){  
-	Array.prototype.indexOf = function(val){  
-		var value = this;  
-		for(var i =0; i < value.length; i++){  
-			if(value[i] == val) return i;  
-		}  
-		return -1;  
-	};  
+		Array.prototype.indexOf = function(val){  
+			var value = this;  
+			for(var i =0; i < value.length; i++){  
+				if(value[i] == val) return i;  
+			}  
+			return -1;  
+		};  
 	}
 
 	// querySelector & querySelectorAll do not compatible with IE6-7
 	if (!document.querySelectorAll) {
-	document.querySelectorAll = function (selectors) {
-		var style = document.createElement('style'), elements = [], element;
-		document.documentElement.firstChild.appendChild(style);
-		document._qsa = [];
+		document.querySelectorAll = function (selectors) {
+			var style = document.createElement('style'), elements = [], element;
+			document.documentElement.firstChild.appendChild(style);
+			document._qsa = [];
 
-		style.styleSheet.cssText = selectors + '{x-qsa:expression(document._qsa && document._qsa.push(this))}';
-		window.scrollBy(0, 0);
-		style.parentNode.removeChild(style);
+			style.styleSheet.cssText = selectors + '{x-qsa:expression(document._qsa && document._qsa.push(this))}';
+			window.scrollBy(0, 0);
+			style.parentNode.removeChild(style);
 
-		while (document._qsa.length) {
-			element = document._qsa.shift();
-			element.style.removeAttribute('x-qsa');
-			elements.push(element);
-		}
-		document._qsa = null;
-		return elements;
-	};
+			while (document._qsa.length) {
+				element = document._qsa.shift();
+				element.style.removeAttribute('x-qsa');
+				elements.push(element);
+			}
+			document._qsa = null;
+			return elements;
+		};
 	}
 
 	if (!document.querySelector) {
-	document.querySelector = function (selectors) {
-		var elements = document.querySelectorAll(selectors);
-		return (elements.length) ? elements[0] : null;
-	};
+		document.querySelector = function (selectors) {
+			var elements = document.querySelectorAll(selectors);
+			return (elements.length) ? elements[0] : null;
+		};
+	}
+
+	lib.mix = function (dest, source) {
+		for (var i in source) {
+			if (source.hasOwnProperty(i)) {
+				dest[i] = source[i];
+			}
+		}
+		return dest;
 	}
 
 	// global errors
 	lib.Errors = {
-
 		Sucess: function (obj) {
 			obj._errorCode = 0;
 			obj._errorString = 'Successful.';
 		},
-
 		IndexOutOfRange: function (obj) {
 			obj._errorCode = -1000;
 			obj._errorString = 'The index is out of range.';
 		},
-			
 		FucNotValidInThisMode: function (obj,fuc,mode) {
 			obj._errorCode = -1001;
 			obj._errorString = ''+fuc+'(): This function is not valid in '+mode+' mode.';
 		},
-
 		InvalidValue: function (obj) {
 			obj._errorCode = -1002;
 			obj._errorString = 'Invalid value.';
 		},
-
 		InvalidParameterType: function (obj) {
 			obj._errorCode = -1003;
 			obj._errorString = 'Parameter type is not supported.';
@@ -1533,7 +1561,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 				return _this._errorCode;
 			}
 		});
-
 		DEF(_this, 'ErrorString', {
 			get: function () {// read-only
 				if (_this._errorCode != 0) {
@@ -1543,20 +1570,27 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 				return 'Successful.';
 			}
 		});
-
 		DEF(_this, 'HowManyImagesInBuffer', {
 			get: function () {
 				return _this.GetCount();
 			}
 		});
-
 		DEF(_this, 'CurrentImageIndexInBuffer', {
 			get: function () {
 				return _this.GetCurentIndex();
+			},
+			set: function (v) {
+				var _v = v * 1;
+
+				if (_v >= 0 && _v < _this.GetCount()) {
+					_this.ShowImage(_v);
+				}
+				return true;
 			}
 		});
 	}
-})(MBC.Lib);/**
+
+})(Dynamsoft);/**
  * MIT https://github.com/lahmatiy/es6-promise-polyfill
 */
 (function(global){
@@ -2161,12 +2195,9 @@ kUtil.copyToClipBoard = function(txt){
         this.css('transform', str);
     };
 })(jQuery);
-(function (ML) {
-
+(function (DL,MBC) {
     "use strict";
-
-    var lib = ML;
-    
+    var lib = DL;   
     function VideoViewer(cfg){
         var _this = this;
         _this.videoHtmlElement = [
@@ -2439,14 +2470,11 @@ kUtil.copyToClipBoard = function(txt){
         });
     }
 
-    ML.VideoViewer = VideoViewer;
+    MBC.VideoViewer = VideoViewer;
 
-})(MBC.Lib);(function (ML) {
-
+})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);(function (DL,MBC) {
     "use strict";
-    
-    var lib = ML;
-
+    var lib = DL;
     function ImageAreaSelector(cfg){
         var _this = this;
         var containerDiv = [
@@ -2535,10 +2563,10 @@ kUtil.copyToClipBoard = function(txt){
 
         // 画布实时的裁切信息：相对于伸缩后的图片
         _this.drawArea = {
-            width: 0,
-            height: 0,
             x: 0,
-            y: 0
+            y: 0,
+            width: 0,
+            height: 0
         };
 
         // 实际的裁切信息：相对于原图
@@ -2553,11 +2581,7 @@ kUtil.copyToClipBoard = function(txt){
 
         // 给控件四条边和四个角添加响应点击事件
         for(var i=0;i<4;i++){
-            lib.addEvent(_this.kPainterCorners[i],"mousedown", fuc_touchstart);
-            lib.addEvent(_this.kPainterCorners[i],"touchstart", fuc_touchstart);
-
-            lib.addEvent(_this.kPainterEdges[i],"mousedown", fuc_touchstart);
-            lib.addEvent(_this.kPainterEdges[i],"touchstart", fuc_touchstart);
+            lib.addEvent([_this.kPainterCorners[i],_this.kPainterEdges[i]],"mousedown touchstart", fuc_touchstart);
         }
 
         function fuc_touchstart(event){
@@ -2566,13 +2590,8 @@ kUtil.copyToClipBoard = function(txt){
 
             _this.dragging = true;
 
-            lib.addEvent(_this.container,"mousemove", fuc_touchmove);
-            lib.addEvent(_this.container,"mouseleave", fuc_touchend);
-            lib.addEvent(_this.container,"mouseup", fuc_touchend);
-
-            lib.addEvent(_this.container,"touchmove", fuc_touchmove);
-            lib.addEvent(_this.container,"touchend", fuc_touchend);
-
+            lib.addEvent(_this.container,"mousemove touchmove", fuc_touchmove);
+            lib.addEvent(_this.container,"mouseleave mouseup touchend", fuc_touchend);
 
             var touches = ev.changedTouches;
 
@@ -2688,12 +2707,8 @@ kUtil.copyToClipBoard = function(txt){
             if(!_this.dragging) return;
             _this.dragging = false;
 
-            lib.removeEvent(_this.container,"mousemove", fuc_touchmove);
-            lib.removeEvent(_this.container,"mouseleave", fuc_touchend);
-            lib.removeEvent(_this.container,"mouseup", fuc_touchend);
-
-            lib.removeEvent(_this.container,"touchmove", fuc_touchmove);
-            lib.removeEvent(_this.container,"touchend", fuc_touchend);
+            lib.removeEvent(_this.container,"mousemove touchmove", fuc_touchmove);
+            lib.removeEvent(_this.container,"mouseleave mouseup touchend", fuc_touchend);
         }
     }
 
@@ -2710,18 +2725,16 @@ kUtil.copyToClipBoard = function(txt){
         return true;
     }
 
-    ImageAreaSelector.prototype.ShowCropRect = function(rotateTime){
+    ImageAreaSelector.prototype.ShowCropRect = function(){
         var _this = this;
         if(_this.viewer.mode != 'edit') return;
         _this.isCropRectShowing = true;
         _this.SetVisible(true);
 
-        if(rotateTime == 1){
-            // rotate 次数为偶数
+        if(!_this.viewer.isSwitchedWH){
             _this.maxWidth = _this.viewer._canvasArea.width;
             _this.maxHeight = _this.viewer._canvasArea.height;
         }else{
-            // rotate 次数为奇数
             _this.maxWidth = _this.viewer._canvasArea.height;
             _this.maxHeight = _this.viewer._canvasArea.width;
         }
@@ -2732,19 +2745,12 @@ kUtil.copyToClipBoard = function(txt){
         return true;
     }
 
-    ImageAreaSelector.prototype.__getDrawArea = function(){
+    ImageAreaSelector.prototype.HideCropRect = function(){
         var _this = this;
-        var curDrawRect = {
-            width: _this.drawArea.width,
-            height: _this.drawArea.height,
-            x: _this.drawArea.x,
-            y: _this.drawArea.y
-        };
-        return curDrawRect;
-    }
+        _this.isCropRectShowing = false;
+        _this.SetVisible(false);
 
-    ImageAreaSelector.prototype.__getCropArea = function(){
-        var _this = this;
+        return true;
     }
 
     ImageAreaSelector.prototype.__updateDrawArea = function(w,h,x,y) {
@@ -2770,22 +2776,29 @@ kUtil.copyToClipBoard = function(txt){
         return true;
     }
 
-    ImageAreaSelector.prototype.HideCropRect = function(){
-        var _this = this;
-        _this.isCropRectShowing = false;
-        _this.SetVisible(false);
+    ImageAreaSelector.prototype.__getCropArea = function(){
+        var _this = this,curCropRect,
+             _x = _this.drawArea.x / _this.maxWidth,
+            _y = _this.drawArea.y / _this.maxHeight,
+            _w = _this.drawArea.width / _this.maxWidth,
+            _h = _this.drawArea.height / _this.maxHeight;
 
-        return true;
+        curCropRect = {
+            x: _x,
+            y: _y,
+            width: _w,
+            height: _h
+        }
+        _this.cropArea = curCropRect;
+        return curCropRect;
     }
 
-    ML.ImageAreaSelector = ImageAreaSelector;
+    MBC.ImageAreaSelector = ImageAreaSelector;
 
-})(MBC.Lib);(function (ML) {
-
+})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);(function (DL,MBC) {
 	"use strict";
+	var lib = DL;
 
-	var lib = ML;
-	
 	function ImageControl(cfg) {
 		var _this = this;
 
@@ -2946,7 +2959,6 @@ kUtil.copyToClipBoard = function(txt){
 		}
 
 		_this.__fitImage();
-
 		return true;
 	};
 
@@ -2963,7 +2975,6 @@ kUtil.copyToClipBoard = function(txt){
 		var _this = this;
 
 		_this.__getImageByUrl();
-
 		return true;
 	};
 
@@ -3013,23 +3024,20 @@ kUtil.copyToClipBoard = function(txt){
 			_this.divOut.appendChild(_this.objImage);
 
 			_this.Show();
+			_this.SetVisible(true);
 		};
 
 		newImage.onerror = function (e) {
 			//newImage.src = url;
 		};
-
 		return true;
 	};
 
-	ML.ImageControl = ImageControl;
+	MBC.ImageControl = ImageControl;
 
-})(MBC.Lib);(function (ML) {
-
+})(Dynamsoft.MBC.Lib, Dynamsoft.MBC);(function (DL,MBC) {
 	"use strict";
-
-	var lib = ML;
-	
+	var lib = DL;	
 	function ThumbnailControl(cfg) {
 		var _this = this;
 
@@ -3420,14 +3428,11 @@ kUtil.copyToClipBoard = function(txt){
 		return true;
 	};
 
-	ML.ThumbnailControl = ThumbnailControl;
+	MBC.ThumbnailControl = ThumbnailControl;
 
-})(MBC.Lib);(function (ML) {
-
+})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);(function (DL,MBC) {
     "use strict";
-    
-    var lib = ML;
-
+    var lib = DL;
     function ImageViewer(cfg){
         var _this = this;
         var containerDiv = [
@@ -3509,12 +3514,9 @@ kUtil.copyToClipBoard = function(txt){
         });
 
         _this._startPos = {};
-        lib.addEvent(_this._imgContainer,"touchstart", fuc_touchstart);
+        lib.addEvent(_this._imgContainer,"touchstart mousedown", fuc_touchstart);
         lib.addEvent(_this._imgContainer,"touchmove", fuc_touchmove);
-        lib.addEvent(_this._imgContainer,"touchend", fuc_touchend);
-
-        lib.addEvent(_this._imgContainer,"mousedown", fuc_touchstart);
-        lib.addEvent(_this._imgContainer,"mouseup", fuc_touchend);
+        lib.addEvent(_this._imgContainer,"touchend mouseup", fuc_touchend);
         
         function fuc_touchstart(event){
             var ev = event || window.event;
@@ -3604,42 +3606,38 @@ kUtil.copyToClipBoard = function(txt){
         }
 
         //https://developer.mozilla.org/zh-CN/docs/Web/Events
-        
-        _this.videoSettings = {video:{/*width:{ideal:2048},height:{ideal:2048},*/facingMode:{ideal:"environment"}}};
 
         // 操做数组：记录操作方法
         _this.stack = [];
         _this.curStep = -1;
 
-        // 点击 save 时的旋转角度总数
-        _this.rotateAngle = 0;
-        // 点击 save 时的 filp 总次数
-        _this.flipNum = 0;
-        // 点击 save 时的 mirror 总次数
-        _this.mirrorNum = 0;
+        // ImageViewer 当前显示的图片是否因为旋转而宽高互换
+        _this.isSwitchedWH = false;
 
         // 是否替换原图
-        _this.replaceOriginalImage = true;
+        _this.replaceOriginalImage = false;
 
         // Canvas 的宽高和位置信息
         _this._canvasArea = {
-            width: 0,
-            height: 0,
+            width: 300,
+            height: 150,
             left: 0,
             top: 0
         };
+        
+        _this.videoSettings = {video:{/*width:{ideal:2048},height:{ideal:2048},*/facingMode:{ideal:"environment"}}};
 
         var cfg = {};
         cfg.viewer = _this;
         cfg.videoSettings = _this.videoSettings;
         cfg.container = _this._imgContainer;
 
-        _this.VideoViewer = new ML.VideoViewer(cfg);
-        _this.ImageAreaSelector = new ML.ImageAreaSelector(cfg);
+        _this.VideoViewer = new MBC.VideoViewer(cfg);
+        _this.ImageAreaSelector = new MBC.ImageAreaSelector(cfg);
 
         lib.attachProperty(_this);
         // 设置  ImageViewer 里的元素宽高
-        _this.__init(cfg);
+        _this.__init();
     }
 
     ImageViewer.prototype.beforeAddImgFromFileChooseWindow = null;
@@ -3668,13 +3666,6 @@ kUtil.copyToClipBoard = function(txt){
         _this.thumbnailImagesPerRow = Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH)>2?Math.floor(_this._thumbnailContainerW / _this._thumbnailContainerH):3;
 
         _this._thumbnailsDiv.style.height = _this._thumbnailContainerH + 'px';
-
-        var maxEditingCvsWH;
-        (function(){
-            var dpr = window.devicePixelRatio || 1;
-            var w = screen.width, h = screen.height;
-            maxEditingCvsWH = Math.min(w,h)*dpr;
-        })();
     }
 
     ImageViewer.prototype.AdaptiveLayout = function () {
@@ -3698,7 +3689,9 @@ kUtil.copyToClipBoard = function(txt){
         _this.__reInitThumbnailControlPosition();
 
         // 重置 canvas 控件的宽高和位置
-        _this.__updateCanvasUI();
+        if(_this.mode == 'edit'){
+            _this.__setCanvasStyleFit();
+        }
 
         return true;
     }
@@ -3744,17 +3737,18 @@ kUtil.copyToClipBoard = function(txt){
         }   
         
         // 添加 ImageControl 
-        var objImageControl = new ML.ImageControl(cfg);
+        var objImageControl = new MBC.ImageControl(cfg);
         _this.aryImageControls.push(objImageControl);
-        _this._addImgToContainer(objImageControl.GetEL());
+        _this.__addImgToContainer(objImageControl.GetEL());
 
         // 添加 ThumbnailControl 
-        var objThumbnailControl = new ML.ThumbnailControl(cfg);
+        var objThumbnailControl = new MBC.ThumbnailControl(cfg);
         _this.aryThumbnailControls.push(objThumbnailControl);
-        _this._addImgToThumbnail(objThumbnailControl.GetEL());
+        _this.__addImgToThumbnail(objThumbnailControl.GetEL());
 
         _this.__resetSelection();
 
+        _this._updateNumUI();
         lib.Errors.Sucess(_this);
         return true;
     }
@@ -3952,29 +3946,52 @@ kUtil.copyToClipBoard = function(txt){
         }
     };
 
-    ImageViewer.prototype.EnterEdit = function(){
+    ImageViewer.prototype.ShowImageEditor = function(){
         var _this = this;
-        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'EnterEdit','edit'); return false;
+        if(_this.mode == 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'ShowImageEditor','edit'); return false;
         }else if(_this.curIndex < 0){ lib.Errors.IndexOutOfRange(_this); return false; }
         _this.mode = 'edit';
 
-        _this.aryImageControls[_this.curIndex].SetVisible(false);
-        _this.__pushStack('enterEdit');
-        _this.__updateCanvasUI();
+        var curImg = _this.aryImageControls[_this.curIndex];
+        curImg.SetVisible(false);
+        _this.__setCanvasVisible(true);
+        _this.ctx.clearRect(0,0,_this._canvasArea.width,_this._canvasArea.height);
+        _this._canvasArea = {
+            width: 300,
+            height: 150,
+            left: 0,
+            top: 0
+        };
+        var transformNew = new kUtil.Matrix(1,0,0,1,0,0);
+        $(_this._canvas).setTransform(transformNew);
+        var _curStack = {
+            fun: 'ShowImageEditor',
+            crop: {x: 0, y: 0, width: 1, height: 1},
+            draw: {x: 0, y: 0, width: curImg._origImageWidth, height: curImg._origImageHeight},
+            transform: new kUtil.Matrix(1,0,0,1,0,0),
+            srcBlob: curImg.imageUrl
+        };
+        _this.stack.push(_curStack);
+        _this.curStep++;
+
+        _this.__updateCanvasInner(false);
 
         lib.Errors.Sucess(_this);
         return true;
     };
 
-    ImageViewer.prototype.CancelEdit = function(){
+    ImageViewer.prototype.CloseImageEditor = function(bShowImg){
         var _this = this;
-
-        if(_this.mode == 'view'){ lib.Errors.FucNotValidInThisMode(_this,'CancelEdit','view'); return false; }
+        if(_this.mode == 'view'){ lib.Errors.FucNotValidInThisMode(_this,'CloseImageEditor','view'); return false;}
         _this.mode = 'view';
+        var _bShowImg = (bShowImg == false)?false:true;
 
-        _this.aryImageControls[_this.curIndex].SetVisible(true);
-
-        _this.__updateCanvasUI();
+        _this.__setCanvasVisible(false);
+        _this.aryImageControls[_this.curIndex].SetVisible(_bShowImg);
+        _this.stack = [];
+        _this.curStep = -1;
+        _this.isSwitchedWH = false;
+        _this.ImageAreaSelector.HideCropRect();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -3987,11 +4004,9 @@ kUtil.copyToClipBoard = function(txt){
         var transformOri = $(_this._canvas).getTransform();
         var transformNew = kUtil.Matrix.dot(new kUtil.Matrix(0,-1,1,0,0,0), transformOri);
         $(_this._canvas).setTransform(transformNew);
-
-        _this.rotateAngle -=90;
         
         _this.__pushStack('rotateLeft');
-        _this.__updateCanvasUI();
+        _this.__setCanvasStyleFit();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -4005,10 +4020,8 @@ kUtil.copyToClipBoard = function(txt){
         var transformNew = kUtil.Matrix.dot(new kUtil.Matrix(0,1,-1,0,0,0), transformOri);
         $(_this._canvas).setTransform(transformNew);
 
-        _this.rotateAngle +=90;
-
         _this.__pushStack('rotateRight');
-        _this.__updateCanvasUI();
+        _this.__setCanvasStyleFit();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -4025,10 +4038,8 @@ kUtil.copyToClipBoard = function(txt){
         }
         $(_this._canvas).setTransform(transformNew);
 
-        _this.rotateAngle +=90;
-
         _this.__pushStack('rotateRight');
-        _this.__updateCanvasUI();
+        _this.__setCanvasStyleFit();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -4042,10 +4053,8 @@ kUtil.copyToClipBoard = function(txt){
         var transformNew = kUtil.Matrix.dot(new kUtil.Matrix(-1,0,0,1,0,0), transformOri);
         $(_this._canvas).setTransform(transformNew);
 
-        _this.mirrorNum++;
-
         _this.__pushStack('mirror');
-        _this.__updateCanvasUI();
+        _this.__setCanvasStyleFit();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -4059,10 +4068,8 @@ kUtil.copyToClipBoard = function(txt){
         var transformNew = kUtil.Matrix.dot(new kUtil.Matrix(1,0,0,-1,0,0), transformOri);
         $(_this._canvas).setTransform(transformNew);
 
-        _this.flipNum++;
-
         _this.__pushStack('flip');
-        _this.__updateCanvasUI();
+        _this.__setCanvasStyleFit();
 
         lib.Errors.Sucess(_this);
         return true;
@@ -4071,100 +4078,28 @@ kUtil.copyToClipBoard = function(txt){
     ImageViewer.prototype.Crop = function(){
         var _this = this;
         if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Crop','view'); return false; }
+        var _newCropArea = _this.ImageAreaSelector.__getCropArea();
+        if(_newCropArea.x == 0 && _newCropArea.y == 0 && _newCropArea.width == 1 && _newCropArea.height == 1){ return;}
 
+        _this.__pushStack('Crop');
+
+        _this.__updateCanvasInner(false);
+
+        lib.Errors.Sucess(_this);
+        return true;
     }
 
     ImageViewer.prototype.Save = function(){
-        var _this = this;
-        if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Save','view'); return false; }
+         var _this = this;
+         if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Save','view'); return false; }
 
-        var img = _this.aryImageControls[_this.curIndex].objImage;
-        var process = _this.stack[_this.curStep];
-
-        var imgOW = img.naturalWidth || img.width;
-        var imgOH = img.naturalHeight || img.height;
-        var crop = process.crop;
-        var tsf = process.transform;
-        var context2d = _this.ctx;
-        var mainCvs = _this._canvas;
-        var bTrueTransform = true;
-
-        var sWidth = mainCvs.fullQualityWidth = Math.round(imgOW) || 1,
-            sHeight = mainCvs.fullQualityHeight = Math.round(imgOH) || 1;
-        var isSwitchedWH = false;
-        if(0 != tsf.a*tsf.d && 0 == tsf.b*tsf.c){
-            mainCvs.fullQualityWidth = sWidth;
-            mainCvs.fullQualityHeight = sHeight;
-        }else{
-            mainCvs.fullQualityWidth = sHeight;
-            mainCvs.fullQualityHeight = sWidth;
-            if(bTrueTransform){
-                isSwitchedWH = true;
-            }
-        }
-        mainCvs.hasCompressed = false;
-        if(bTrueTransform){
-            var cvsW, cvsH;
-            if(isSwitchedWH){
-                cvsW = sHeight;
-                cvsH = sWidth;
-            }else{
-                cvsW = sWidth;
-                cvsH = sHeight;
-            }
-            mainCvs.width = cvsW;
-            mainCvs.height = cvsH;
-            var drawE = cvsW/2 * (1 - tsf.a - tsf.c),
-                drawF = cvsH/2 * (1 - tsf.b - tsf.d);
-            context2d.setTransform(tsf.a, tsf.b, tsf.c, tsf.d, drawE, drawF);
-        }
-        else if(sWidth > maxEditingCvsWH || sHeight > maxEditingCvsWH){
-            var rate = maxEditingCvsWH / Math.max(sWidth, sHeight);
-            mainCvs.width = Math.round(sWidth * rate) || 1;
-            mainCvs.height = Math.round(sHeight * rate) || 1;
-            mainCvs.hasCompressed = true;
-        }else{
-            mainCvs.width = sWidth;
-            mainCvs.height = sHeight;
-        }
-        var sx = Math.round(imgOW*crop.x), 
-            sy = Math.round(imgOH*crop.y);
-        if(sx == imgOW){ --sx; }
-        if(sy == imgOH){ --sy; }
-        var dWidth, dHeight;
-        if(!isSwitchedWH){
-            dWidth = mainCvs.width;
-            dHeight = mainCvs.height;
-        }else{
-            dWidth = mainCvs.height;
-            dHeight = mainCvs.width;
-        }
-        if(sWidth/dWidth <= 2){
-            context2d.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, dWidth, dHeight);
-        }else{
-            var tempCvs = document.createElement('canvas');
-            tempCvs.width = Math.round(sWidth/2);
-            tempCvs.height = Math.round(sHeight/2);
-            var tempCtx = tempCvs.getContext('2d');
-            var _sWidth, _sHeight, _dWidth = Math.round(sWidth/2), _dHeight = Math.round(sHeight/2);
-            tempCtx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, _dWidth, _dHeight);
-            for(;;){
-                _sWidth = _dWidth, _sHeight = _dHeight, _dWidth = Math.round(_sWidth/2), _dHeight = Math.round(_sHeight/2);
-                if(_dWidth <= dWidth || _dHeight <= dHeight){break;}
-                tempCtx.drawImage(tempCvs, 0, 0, _sWidth, _sHeight, 0, 0, _dWidth, _dHeight);
-            }
-            context2d.drawImage(tempCvs, 0, 0, _sWidth, _sHeight, 0, 0, dWidth, dHeight);
-        }
-        if(bTrueTransform){
-            $(mainCvs).setTransform(new kUtil.Matrix(1,0,0,1,0,0));
-        }else{
-            $(mainCvs).setTransform(tsf);
-        }
+        _this.__updateCanvasInner(true);
         
+        _this.CloseImageEditor(false);
         if(!_this.replaceOriginalImage){
-            _this.LoadImageEx(mainCvs);
+            _this.LoadImageEx(_this._canvas);
         }else{
-            lib.canvasToBlob(mainCvs, function(blob){
+            lib.canvasToBlob(_this._canvas, function(blob){
                 var url = URL.createObjectURL(blob);
                 var curImg = _this.aryImageControls[_this.curIndex];
                 var curThumbImg = _this.aryThumbnailControls[_this.curIndex];
@@ -4173,12 +4108,30 @@ kUtil.copyToClipBoard = function(txt){
                 curImg.Refresh();
 
                 curThumbImg.imageUrl = url;
-                curThumbImg.Refresh();               
+                curThumbImg.Refresh();
             });
         }
-
-        _this.CancelEdit();
         return true;
+    }
+
+    ImageViewer.prototype.Undo = function(){
+        var _this = this;
+        if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Undo','view'); return false; }
+        if(_this.curStep > 0){
+            var toStep = _this.curStep - 1;
+            while(null == _this.stack[toStep]){--toStep;}
+            _this.__fromToStepAsync(_this.curStep, toStep);
+        }
+    }
+
+    ImageViewer.prototype.Redo = function(){
+        var _this = this;
+        if(_this.mode != 'edit'){ lib.Errors.FucNotValidInThisMode(_this,'Redo','view'); return false; }
+        if(_this.curStep < _this.stack.length - 1){
+            var toStep = _this.curStep + 1;
+            while(null == _this.stack[toStep]){++toStep;}
+            _this.__fromToStepAsync(_this.curStep, toStep);
+        }
     }
 
     ImageViewer.prototype.RemoveAllSelectedImages = function(){
@@ -4245,80 +4198,137 @@ kUtil.copyToClipBoard = function(txt){
         _this.__reInitThumbnailControlPosition();
     }
 
-    ImageViewer.prototype.__updateCanvasUI = function(){
+    ImageViewer.prototype.__updateCanvasInner = function(bTrueTransform){
         var _this = this;
+        var img = _this.aryImageControls[_this.curIndex].objImage;
+        var imgOW = img.naturalWidth || img.width;
+        var imgOH = img.naturalHeight || img.height;
+        var process = _this.stack[_this.curStep];
+        var crop = process.crop;
+        var tsf = process.transform;
+        var ctx = _this.ctx;
+        var cvs = _this._canvas;
 
-        if(_this.mode == 'edit'){
-            _this._canvas.style.display = '';
-            var _curStack = _this.stack[_this.curStep];
-            // 判断旋转了几次：0(奇数次) / 1(偶数次)
-            var rotateTime = Math.abs(_curStack.transform.a);
-
-            _this.__attachImgToCanvas(rotateTime);
-            _this.ImageAreaSelector.ShowCropRect(rotateTime);
-            _curStack.crop = _this.ImageAreaSelector.__getDrawArea();
-        }else if(_this.mode == 'view'){
-            _this._canvas.style.display = 'none';
-            _this.stack = [];
-            _this.curStep = -1;
-            //_this.ctx.clearRect(0,0,_this._canvasArea.width,_this._canvasArea.height);
-            _this._canvasArea = {
-                width: 0,
-                height: 0,
-                left: 0,
-                top: 0
-            };
-            var transformNew = new kUtil.Matrix(1,0,0,1,0,0);
-            $(_this._canvas).setTransform(transformNew);
-            _this.ImageAreaSelector.HideCropRect();
+        var sWidth = cvs.fullQualityWidth = Math.round(imgOW * crop.width) || 1,
+            sHeight = cvs.fullQualityHeight = Math.round(imgOH * crop.height) || 1;
+        if(0 != tsf.a*tsf.d && 0 == tsf.b*tsf.c){
+            cvs.fullQualityWidth = sWidth;
+            cvs.fullQualityHeight = sHeight;
+        }else{
+            cvs.fullQualityWidth = sHeight;
+            cvs.fullQualityHeight = sWidth;
+            if(bTrueTransform){
+                _this.isSwitchedWH = true;
+            }
         }
+        $(cvs).setTransform(new kUtil.Matrix(1,0,0,1,0,0));
+        cvs.hasCompressed = false;
+        if(bTrueTransform){
+            var cvsW, cvsH;
+            if(_this.isSwitchedWH){
+                cvsW = sHeight;
+                cvsH = sWidth;
+            }else{
+                cvsW = sWidth;
+                cvsH = sHeight;
+            }
+            cvs.width = cvsW;
+            cvs.height = cvsH;
+            var drawE = cvsW/2 * (1 - tsf.a - tsf.c),
+                drawF = cvsH/2 * (1 - tsf.b - tsf.d);
+            ctx.setTransform(tsf.a, tsf.b, tsf.c, tsf.d, drawE, drawF);
+        }
+        else{
+            cvs.width = sWidth;
+            cvs.height = sHeight;
+        }
+        var sx = Math.round(imgOW*crop.x), 
+            sy = Math.round(imgOH*crop.y);
+        if(sx == imgOW){ --sx; }
+        if(sy == imgOH){ --sy; }
+        var dWidth, dHeight;
+        if(_this.isSwitchedWH && bTrueTransform){
+            dWidth = cvs.height;
+            dHeight = cvs.width;
+        }else{
+            dWidth = cvs.width;
+            dHeight = cvs.height;
+        }
+        ctx.clearRect(0,0,dWidth,dHeight);
+        ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, dWidth, dHeight);
+        if(bTrueTransform){
+            $(cvs).setTransform(new kUtil.Matrix(1,0,0,1,0,0));
+        }else{
+            $(cvs).setTransform(tsf);
+        }
+
+        _this.__setCanvasStyleFit(bTrueTransform);
+    };
+
+    ImageViewer.prototype.__fromToStepAsync = function(fromStep, toStep, callback){
+        var _this = this;
+        _this.curStep = toStep;
+        var _crop = _this.stack[fromStep].crop;
+        var crop = _this.stack[_this.curStep].crop;
+        if(_crop.x == crop.x && 
+            _crop.y == crop.y && 
+            _crop.width == crop.width && 
+            _crop.bottom == crop.bottom &&
+            _this.stack[fromStep].srcBlob == _this.stack[_this.curStep].srcBlob
+        ){
+            // case only do transform, don't redraw mainCvs
+            $(_this._canvas).setTransform(_this.stack[_this.curStep].transform.dot(_this.stack[fromStep].transform.inversion()).dot($(_this._canvas).getTransform()));
+            _this.__setCanvasStyleFit();
+            if(callback){callback();}
+        }else{
+            _this.__updateCanvasInner(false);
+        }
+    };
+
+    ImageViewer.prototype.__setCanvasStyleFit = function(bTrueTransform){
+        var _this = this;
+        var ca = _this._canvasArea;
+        var tsf = _this.stack[_this.curStep].transform;
+        if(0 != tsf.a*tsf.d && 0 == tsf.b*tsf.c){
+            _this.isSwitchedWH = false;
+        }else{
+            _this.isSwitchedWH = true;
+        }
+
+        if(_this.isSwitchedWH && !bTrueTransform){
+            var imageAspectRatio = _this._canvas.height/_this._canvas.width;
+        }else{
+            var imageAspectRatio = _this._canvas.width/_this._canvas.height;
+        }
+
+        var imgsDivAspectRatio = _this._imgsDivW/_this._imgsDivH;
         
+        if(imgsDivAspectRatio>imageAspectRatio){
+            ca.height = _this._imgsDivH;
+            ca.width = imageAspectRatio*_this._imgsDivH;
+        }else{
+            ca.width = _this._imgsDivW;
+            ca.height = ca.width/imageAspectRatio;
+        }
+
+        if(_this.isSwitchedWH && !bTrueTransform){
+            var tempW = ca.width;
+            ca.width = ca.height;
+            ca.height = tempW;
+        }
+
+        ca.left = Math.floor((_this._imgsDivW-ca.width)/2);
+        ca.top = Math.floor((_this._imgsDivH-ca.height)/2);
+
+        _this._canvas.style.left = ca.left + 'px';
+        _this._canvas.style.top = ca.top + 'px';
+        _this._canvas.style.width = ca.width + 'px';
+        _this._canvas.style.height = ca.height + 'px';
+
+        _this.ImageAreaSelector.ShowCropRect();
     }
 
-    ImageViewer.prototype.__attachImgToCanvas = function(rotateTime){
-        var _this = this;
-        if(_this.mode != 'edit') return;
-
-        var curImg = _this.aryImageControls[_this.curIndex];
-
-        var canvasAspectRatio = _this._imgsDivW/_this._imgsDivH;
-        
-        if(rotateTime == 1){
-            // 旋转偶数次
-            var imageAspectRatio = curImg._origImageWidth/curImg._origImageHeight;
-        }else{
-            // 旋转奇数次
-            var imageAspectRatio = curImg._origImageHeight/curImg._origImageWidth;
-        }
-        
-        if(canvasAspectRatio>imageAspectRatio){
-            _this._canvasArea.height = _this._imgsDivH;
-            _this._canvasArea.width = imageAspectRatio*_this._imgsDivH;
-        }else{
-            _this._canvasArea.width = _this._imgsDivW;
-            _this._canvasArea.height = _this._canvasArea.width/imageAspectRatio;
-        }
-
-        if(rotateTime == 0){
-            var tempW = _this._canvasArea.width;
-            _this._canvasArea.width = _this._canvasArea.height;
-            _this._canvasArea.height = tempW;
-        }
-
-        _this._canvasArea.left = Math.floor((_this._imgsDivW-_this._canvasArea.width)/2);
-        _this._canvasArea.top = Math.floor((_this._imgsDivH-_this._canvasArea.height)/2);
-
-        _this._canvas.style.left = _this._canvasArea.left + 'px';
-        _this._canvas.style.top = _this._canvasArea.top + 'px';
-        _this._canvas.setAttribute("width",_this._canvasArea.width);
-        _this._canvas.setAttribute("height",_this._canvasArea.height);
-
-        var ctx = _this._canvas.getContext("2d");
-        ctx.clearRect(0, 0, _this._canvasArea.width, _this._canvasArea.height);
-        ctx.drawImage(_this.aryImageControls[_this.curIndex].objImage, 0, 0, _this._canvasArea.width, _this._canvasArea.height);
-    }
-
-    ImageViewer.prototype._addImgToContainer = function (objImg) {
+    ImageViewer.prototype.__addImgToContainer = function (objImg) {
         var _this = this;
 
         _this._imgsDiv.appendChild(objImg);
@@ -4327,7 +4337,7 @@ kUtil.copyToClipBoard = function(txt){
         return true;
     }
 
-    ImageViewer.prototype._addImgToThumbnail = function (objThumb) {
+    ImageViewer.prototype.__addImgToThumbnail = function (objThumb) {
         var _this = this;
 
         _this._thumbnailsDiv.appendChild(objThumb);
@@ -4352,20 +4362,6 @@ kUtil.copyToClipBoard = function(txt){
         }
     };
 
-    // ImageViewer.prototype.__recalculateDivThumbnailSize = function () {
-    //     var _this = this;
-    //     var aryThumbnailControls = _this.aryThumbnailControls;
-    //     var _newWidth = _this.ThumbnailImageMargin;
-    //     for(var i=0;i<aryThumbnailControls.length;i++){
-    //         _newWidth += aryThumbnailControls[i].GetControlWidth() + _this.ThumbnailImageMargin;
-    //     }
-    //     _this._thumbnailsDiv.style.width = (_newWidth>_this._thumbnailContainerW?_newWidth:_this.imageViewWidth) + 'px';
-
-    //     _this._thumbnailContainer.scrollLeft = _this._thumbnailContainer.scrollWidth;
-
-    //     return true;
-    // }
-
     ImageViewer.prototype.__reInitImageControlPosition = function () {
         var _this = this;
         
@@ -4376,6 +4372,7 @@ kUtil.copyToClipBoard = function(txt){
 
         for(var i=0;i<_aryImgs.length;i++){
             if(i == _curIndex){
+                _aryImgs[_curIndex].SetVisible(true);
                 _aryImgs[_curIndex].SetLocation();
             }else if(i==_pIndex){
                 _aryImgs[_pIndex].SetLocation(-_this._imgContainerW);
@@ -4434,11 +4431,21 @@ kUtil.copyToClipBoard = function(txt){
 
     };
 
+    ImageViewer.prototype.__setCanvasVisible = function(v){
+        var _this = this;
+        if(v){
+            _this._canvas.style.display = '';
+        }else{
+            _this._canvas.style.display = 'none';
+        }
+    }
+
     ImageViewer.prototype.__pushStack = function(funName){
         var _this = this;
         var _curStack = {
             fun: funName,
-            crop: _this.ImageAreaSelector.__getDrawArea(),
+            crop: _this.__getFinalCropArea()[0],
+            draw: _this.__getFinalCropArea()[1],
             transform: $(_this._canvas).getTransform(),
             srcBlob: _this.aryImageControls[_this.curIndex].imageUrl
         };
@@ -4448,11 +4455,76 @@ kUtil.copyToClipBoard = function(txt){
         return true;
     }
 
+    ImageViewer.prototype.__getFinalCropArea = function(){
+        var _this = this,
+            img = _this.aryImageControls[_this.curIndex].objImage,
+            imgOW = img.naturalWidth || img.width,
+            imgOH = img.naturalHeight || img.height,
+            curStack = _this.stack[_this.curStep],
+            curCrop = curStack.crop,
+            curTsf = curStack.transform,
+            newCrop = _this.ImageAreaSelector.__getCropArea(),
+            finalCrop = {
+                x: curCrop.x,
+                y: curCrop.y,
+                width: curCrop.width,
+                height: curCrop.height
+            };
+  
+        if(0 != curTsf.a*curTsf.d && 0 == curTsf.b*curTsf.c){
+            if(newCrop){
+                if(1 == curTsf.a){
+                    finalCrop.x += newCrop.x * curCrop.width;
+                }else{
+                    finalCrop.x += (1 - newCrop.x - newCrop.width) * curCrop.width;
+                }
+                if(1 == curTsf.d){
+                    finalCrop.y += newCrop.y * curCrop.height;
+                }else{
+                    finalCrop.y += (1 - newCrop.y - newCrop.height) * curCrop.height;
+                }
+                finalCrop.width *= newCrop.width;
+                finalCrop.height *= newCrop.height;
+            }
+        }else{
+            if(newCrop){
+                if(1 == curTsf.b){
+                    finalCrop.x += newCrop.y * curCrop.width;
+                }else{
+                    finalCrop.x += (1 - newCrop.y - newCrop.height) * curCrop.width;
+                }
+                if(1 == curTsf.c){
+                    finalCrop.y += newCrop.x * curCrop.height;
+                }else{
+                    finalCrop.y += (1 - newCrop.x - newCrop.width) * curCrop.height;
+                }
+                finalCrop.width *= newCrop.height;
+                finalCrop.height *= newCrop.width;
+            }
+        }
+        // set proper accuracy
+        var img = _this.aryImageControls[_this.curIndex];
+        var accuracy = Math.pow(10, Math.ceil(Math.max(img._origImageWidth, img._origImageHeight)).toString().length+2);
+        finalCrop.x = Math.round(finalCrop.x*accuracy)/accuracy;
+        finalCrop.y = Math.round(finalCrop.y*accuracy)/accuracy;
+        finalCrop.width = Math.round(finalCrop.width*accuracy)/accuracy;
+        finalCrop.height = Math.round(finalCrop.height*accuracy)/accuracy;
+
+        var finalDraw = {
+            x: finalCrop.x*imgOW,
+            y: finalCrop.y*imgOH,
+            width: finalCrop.width*imgOW,
+            height: finalCrop.height*imgOH
+        }
+      
+        return [finalCrop,finalDraw];
+    }
+
     ImageViewer.prototype.onNumChange = null;
     ImageViewer.prototype._updateNumUI = function(){
         lib.doCallbackNoBreak(this.onNumChange,[this.curIndex, this.aryImageControls.length]);
     }
 
-    ML.ImageViewer = ImageViewer;
+    MBC.ImageViewer = ImageViewer;
 
-})(MBC.Lib);
+})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);

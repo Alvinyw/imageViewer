@@ -1,9 +1,6 @@
-(function (ML) {
-
+(function (DL,MBC) {
 	"use strict";
-
-	var lib = ML;
-	
+	var lib = DL;	
 	function ThumbnailControl(cfg) {
 		var _this = this;
 
@@ -394,6 +391,6 @@
 		return true;
 	};
 
-	ML.ThumbnailControl = ThumbnailControl;
+	MBC.ThumbnailControl = ThumbnailControl;
 
-})(MBC.Lib);
+})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);

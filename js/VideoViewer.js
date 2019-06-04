@@ -1,9 +1,6 @@
-(function (ML) {
-
+(function (DL,MBC) {
     "use strict";
-
-    var lib = ML;
-    
+    var lib = DL;   
     function VideoViewer(cfg){
         var _this = this;
         _this.videoHtmlElement = [
@@ -276,6 +273,6 @@
         });
     }
 
-    ML.VideoViewer = VideoViewer;
+    MBC.VideoViewer = VideoViewer;
 
-})(MBC.Lib);
+})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);

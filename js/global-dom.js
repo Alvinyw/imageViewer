@@ -1,5 +1,8 @@
-(function (ML) {
-	var lib = ML || {};
+(function (Dynamsoft) {
+	if (!Dynamsoft.MBC)
+		Dynamsoft.MBC = {};
+
+	var lib = Dynamsoft.MBC.Lib = {};
 
 	lib.getElDimensions = function (el) {
 		var displayFormat, elDimensions;
@@ -382,6 +385,15 @@
 		};
 	}
 
+	lib.mix = function (dest, source) {
+		for (var i in source) {
+			if (source.hasOwnProperty(i)) {
+				dest[i] = source[i];
+			}
+		}
+		return dest;
+	}
+
 	// global errors
 	lib.Errors = {
 		Sucess: function (obj) {
@@ -438,8 +450,16 @@
 		DEF(_this, 'CurrentImageIndexInBuffer', {
 			get: function () {
 				return _this.GetCurentIndex();
+			},
+			set: function (v) {
+				var _v = v * 1;
+
+				if (_v >= 0 && _v < _this.GetCount()) {
+					_this.ShowImage(_v);
+				}
+				return true;
 			}
 		});
 	}
 
-})(MBC.Lib);
+})(Dynamsoft);

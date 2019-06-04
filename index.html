@@ -8,8 +8,7 @@
     <link rel="stylesheet" type="text/css" href="css/cssResetH5.css" />
     <link rel="stylesheet" type="text/css" href="css/mbc.css" />
     <script type="text/javascript">
-    	var MBC = MBC || {};
-		MBC.Lib = MBC.Lib || {};
+    	var Dynamsoft = Dynamsoft || {};
     </script>
 </head>
 <body>
@@ -26,8 +25,8 @@
             <li><button onclick="fuc_download()">download</button></li>
             -->
             <li class="visible_inView"><button onclick="fuc_showVideo()">show video</button></li>
-            <li class="visible_inView"><button onclick="fuc_enterEdit()">edit</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_cancelEdit()">cancel</button></li>
+            <li class="visible_inView"><button onclick="fuc_ShowImageEditor()">edit</button></li>
+            <li class="visible_inEdit"><button onclick="fuc_CloseImageEditor()">cancel</button></li>
             <li class="visible_inEdit"><button onclick="fuc_rotateLeft()">RotateLeft</button></li>
             <li class="visible_inEdit"><button onclick="fuc_rotateRight()">RotateRight</button></li>
             <li class="visible_inEdit"><button onclick="fuc_rotate180()">Rotate180</button></li>
@@ -35,6 +34,8 @@
             <li class="visible_inEdit"><button onclick="fuc_rotateFlip()">Flip</button></li>
             <li class="visible_inEdit"><button onclick="fuc_Crop()">Crop</button></li>
             <li class="visible_inEdit"><button onclick="fuc_Save()">Save</button></li>
+            <li class="visible_inEdit"><button onclick="fuc_Undo()">Undo</button></li>
+            <li class="visible_inEdit"><button onclick="fuc_Redo()">Redo</button></li>
             <li class="visible_inView"><button onclick="fuc_RemoveCurrentImage()">Remove Selected Image</button></li>
             <li class="visible_inView"><button onclick="fuc_RemoveAllImages()">Remove All Images</button></li>
         </ul>
