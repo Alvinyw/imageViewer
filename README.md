@@ -1,9 +1,9 @@
 # imageViewer
-一款基于 Html5 的图片编辑器
+一款基于 Html5、Canvas 的图片编辑器
 
 ## 一、ImageViewer 的 Apis
 
-### 1> 基本功能
+### 基本功能
 1. `LoadImageEx(imgData)`：从本地 load 图片；
 2. `ShowVideo()`：打开摄像头，从摄像头截取图片并 load 到编辑器；
 3. `RemoveAllImages()`：删除所有图片；
@@ -29,7 +29,7 @@ switch(cmd){
 14. `SaveAsPDF(filename,index)`：将索引为 index 的图片保存为 PDF 格式；
 15. `GetBackgroundColor()/SetBackgroundColor()`：获取/设置 ImageViewer 的背景色；
 
-### 2> 编辑功能
+### 编辑功能
 1. `ShowImageEditor()`：进入图片编辑模式；
 2. `CloseImageEditor()`：退出图片编辑模式；
 3. `RotateLeft()`：向左旋转 90°；
@@ -44,7 +44,7 @@ switch(cmd){
 12. `SetCropBackgroundColor()`：设置裁切框的背景色；
 13. `SetCropBorderColor()`：设置裁切框的边框色；
 
-### 3> 其他功能
+### 其他功能
 1. `AdaptiveLayout()`：自适应屏幕大小；
 2. `onNumChange()`：响应当前显示图片 index 改变的钩子函数；
 
