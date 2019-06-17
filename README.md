@@ -1,5 +1,5 @@
 # imageViewer
-兼容 IE6-8 的 ImageView
+兼容 IE6-8 的 ImageViewer
 
 ## 功能展示
 1. 简单的图片展示功能（previous、next、front、last、download、delete）；
