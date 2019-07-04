@@ -2,9 +2,9 @@ html{ width: 100%; height:100%;}
 body{ width:100%; height:100%; background:#eee;}
 
 #main { width: 100%; height: 100%; padding:15px; max-width: 980px; _width:980px; margin: 0 auto;}
-
-#toolGrp { width: 100%; height: 3%;}
-#toolGrp li { display: inline-block; margin-right: 5px; *float:left;}
+#toggleTool { margin-bottom: 4px; width: 100px; height: 3%; font-size: 14px; line-height: 1.5; text-align: center; border: 1px solid #aaa; cursor: pointer; border-radius: 2px; background-color: #ddd; }
+#toolGrp { display: none; width: 100%; position: absolute; z-index: 1000; }
+#toolGrp li { /*display: inline-block; margin-right: 5px; *float:left;*/ }
 #toolGrp li button { padding: 0 5px;}
 
 #imageViewer { border:1px solid #aaa; }

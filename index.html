@@ -13,6 +13,7 @@
 </head>
 <body>
     <div id="main">
+        <div id="toggleTool">APIs</div>
         <ul id="toolGrp">
             <li><button onclick="fuc_LoadImage()">LoadImage</button></li>
             <!--
@@ -68,5 +69,8 @@
 <script>
     $(".visible_inEdit").hide();
     $(".visible_inView").show();
+    $("#toggleTool").click(function(){
+        $("#toolGrp").slideToggle();
+    });
 </script>
 </html>
