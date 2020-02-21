@@ -1126,11 +1126,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
 }.call(this));
 
-(function (Dynamsoft) {
-	if (!Dynamsoft.MBC)
-		Dynamsoft.MBC = {};
+(function (Alvin) {
+	if (!Alvin.MBC)
+		Alvin.MBC = {};
 
-	var lib = Dynamsoft.MBC.Lib = {};
+	var lib = Alvin.MBC.Lib = {};
 
 	lib.getElDimensions = function (el) {
 		var displayFormat, elDimensions;
@@ -1590,7 +1590,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 		});
 	}
 
-})(Dynamsoft);/**
+})(Alvin);/**
  * MIT https://github.com/lahmatiy/es6-promise-polyfill
 */
 (function(global){
@@ -2472,7 +2472,7 @@ kUtil.copyToClipBoard = function(txt){
 
     MBC.VideoViewer = VideoViewer;
 
-})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);(function (DL,MBC) {
+})(Alvin.MBC.Lib,Alvin.MBC);(function (DL,MBC) {
     "use strict";
     var lib = DL;
     function ImageAreaSelector(cfg){
@@ -2795,7 +2795,7 @@ kUtil.copyToClipBoard = function(txt){
 
     MBC.ImageAreaSelector = ImageAreaSelector;
 
-})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);(function (DL,MBC) {
+})(Alvin.MBC.Lib,Alvin.MBC);(function (DL,MBC) {
 	"use strict";
 	var lib = DL;
 
@@ -3035,7 +3035,7 @@ kUtil.copyToClipBoard = function(txt){
 
 	MBC.ImageControl = ImageControl;
 
-})(Dynamsoft.MBC.Lib, Dynamsoft.MBC);(function (DL,MBC) {
+})(Alvin.MBC.Lib, Alvin.MBC);(function (DL,MBC) {
 	"use strict";
 	var lib = DL;	
 	function ThumbnailControl(cfg) {
@@ -3430,7 +3430,7 @@ kUtil.copyToClipBoard = function(txt){
 
 	MBC.ThumbnailControl = ThumbnailControl;
 
-})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);(function (DL,MBC) {
+})(Alvin.MBC.Lib,Alvin.MBC);(function (DL,MBC) {
     "use strict";
     var lib = DL;
     function ImageViewer(cfg){
@@ -4527,4 +4527,4 @@ kUtil.copyToClipBoard = function(txt){
 
     MBC.ImageViewer = ImageViewer;
 
-})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);
+})(Alvin.MBC.Lib,Alvin.MBC);

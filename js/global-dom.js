@@ -1,8 +1,8 @@
-(function (Dynamsoft) {
-	if (!Dynamsoft.MBC)
-		Dynamsoft.MBC = {};
+(function (Alvin) {
+	if (!Alvin.MBC)
+		Alvin.MBC = {};
 
-	var lib = Dynamsoft.MBC.Lib = {};
+	var lib = Alvin.MBC.Lib = {};
 
 	lib.getElDimensions = function (el) {
 		var displayFormat, elDimensions;
@@ -462,4 +462,4 @@
 		});
 	}
 
-})(Dynamsoft);
+})(Alvin);

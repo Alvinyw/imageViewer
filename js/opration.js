@@ -3,7 +3,7 @@ var cfg = {
 	Width:'100%', 
 	Height:'97%'
 }
-var imageViewer = new Dynamsoft.MBC.ImageViewer(cfg);
+var imageViewer = new Alvin.MBC.ImageViewer(cfg);
 
 imageViewer.onNumChange = function(curIndex,imgCount){
     var _curIndex = parseInt(curIndex)+1;

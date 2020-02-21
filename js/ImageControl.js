@@ -238,4 +238,4 @@
 
 	MBC.ImageControl = ImageControl;
 
-})(Dynamsoft.MBC.Lib, Dynamsoft.MBC);
+})(Alvin.MBC.Lib, Alvin.MBC);

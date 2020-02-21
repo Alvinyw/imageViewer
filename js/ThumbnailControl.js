@@ -393,4 +393,4 @@
 
 	MBC.ThumbnailControl = ThumbnailControl;
 
-})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);
+})(Alvin.MBC.Lib,Alvin.MBC);

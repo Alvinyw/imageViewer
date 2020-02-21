@@ -275,4 +275,4 @@
 
     MBC.VideoViewer = VideoViewer;
 
-})(Dynamsoft.MBC.Lib,Dynamsoft.MBC);
+})(Alvin.MBC.Lib,Alvin.MBC);
