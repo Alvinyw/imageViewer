@@ -1,194 +1,231 @@
 var cfg = {
-	ContainerId:'imageViewer', 
-	Width:'100%', 
-	Height:'97%'
+    ContainerId: 'imageViewer',
+    Width: '100%',
+    Height: '85%'
 }
 var imageViewer = new Alvin.MBC.ImageViewer(cfg);
 
-imageViewer.onNumChange = function(curIndex,imgCount){
-    var _curIndex = parseInt(curIndex)+1;
+imageViewer.onNumChange = function (curIndex, imgCount) {
+    var _curIndex = parseInt(curIndex) + 1;
     //console.log('curIndex '+_curIndex+' imgCount: '+imgCount);
 }
 
-window.onresize = function(){
+window.onresize = function () {
     var imgCount = imageViewer.GetCount();
-    if(imgCount>0){
+    if (imgCount > 0) {
         imageViewer.AdaptiveLayout();
     }
 };
 
-function fuc_LoadImage(){
-    if(!imageViewer){return false;}
-    if(uaInfo.strVersion <11.0 && uaInfo.bIE){
+function fuc_LoadImage() {
+    if (!imageViewer) {
+        return false;
+    }
+    if (uaInfo.strVersion < 11.0 && uaInfo.bIE) {
         imageViewer.LoadImageEx('http://localhost:82/dbrjs6.5/assets/images/cs-yc.png');
         imageViewer.LoadImageEx('http://localhost:82/dbrjs6.5/assets/images/cs-avanza.png');
         imageViewer.LoadImageEx('http://localhost:82/dbrjs6.5/assets/images/cs-lm.png');
         imageViewer.LoadImageEx('http://localhost:82/dbrjs6.5/assets/images/cs-ibm.png');
-    }else{
+    } else {
         imageViewer.LoadImageEx();
     }
 }
 
-function fuc_getCount(){
-    if(!imageViewer){return false;}
+function fuc_getCount() {
+    if (!imageViewer) {
+        return false;
+    }
     var _imageCount = imageViewer.GetCount();
-    alert(_imageCount);
     console.log(_imageCount);
 }
 
-function fuc_getCurentIndex(){
-    if(!imageViewer){return false;}
+function fuc_getCurentIndex() {
+    if (!imageViewer) {
+        return false;
+    }
     var _curIndex = imageViewer.GetCurentIndex();
-    alert(_curIndex);
     console.log(_curIndex);
 }
 
-function fuc_getImage(){
-    if(!imageViewer){return false;}
+function fuc_getImage() {
+    if (!imageViewer) {
+        return false;
+    }
     var _curImage = imageViewer.GetImage();
-    alert(_curImage);
     console.log(_curImage);
 }
 
-function fuc_RemoveCurrentImage(){
-    if(!imageViewer){return false;}
+function fuc_RemoveCurrentImage() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.RemoveAllSelectedImages();
 }
 
-function fuc_RemoveAllImages(){
-    if(!imageViewer){return false;}
+function fuc_RemoveAllImages() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.RemoveAllImages();
 }
 
-function fuc_changePage(cmd){
-    if(!imageViewer){return false;}
+function fuc_changePage(cmd) {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.ChangePage(cmd);
 }
 
-function fuc_download(){
-    if(!imageViewer){return false;}
+function fuc_download() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.Download();
 }
 
-function fuc_showVideo(){
-	if(!imageViewer){return false;}
+function fuc_showVideo() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.ShowVideo();
 }
 
-function fuc_ShowImageEditor(){
-	if(!imageViewer){return false;}
+function fuc_ShowImageEditor() {
+    if (!imageViewer) {
+        return false;
+    }
     var ret = imageViewer.ShowImageEditor();
 
-    if(ret){
+    if (ret) {
         $(".visible_inEdit").show();
         $(".visible_inView").hide();
     }
 }
 
-function fuc_CloseImageEditor(){
-	if(!imageViewer){return false;}
+function fuc_CloseImageEditor() {
+    if (!imageViewer) {
+        return false;
+    }
     var ret = imageViewer.CloseImageEditor();
 
-    if(ret){
+    if (ret) {
         $(".visible_inEdit").hide();
         $(".visible_inView").show();
     }
 }
 
-function fuc_rotateLeft(){
-	if(!imageViewer){return false;}
+function fuc_rotateLeft() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.RotateLeft();
 }
 
-function fuc_rotateRight(){
-	if(!imageViewer){return false;}
+function fuc_rotateRight() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.RotateRight();
 }
 
-function fuc_rotate180(){
-    if(!imageViewer){return false;}
-    imageViewer.Rotate('',180);
+function fuc_rotate180() {
+    if (!imageViewer) {
+        return false;
+    }
+    imageViewer.Rotate('', 180);
 }
 
-function fuc_rotateMirror(){
-	if(!imageViewer){return false;}
+function fuc_rotateMirror() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.Mirror();
 }
 
-function fuc_rotateFlip(){
-	if(!imageViewer){return false;}
+function fuc_rotateFlip() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.Flip();
 }
 
-function fuc_Crop(){
-    if(!imageViewer){return false;}
+function fuc_Crop() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.Crop();
 }
 
-function fuc_Save(){
-    if(!imageViewer){return false;}
+function fuc_Save() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.Save();
 
     $(".visible_inEdit").hide();
     $(".visible_inView").show();
 }
 
-function fuc_Undo(){
-    if(!imageViewer){return false;}
+function fuc_Undo() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.Undo();
 }
 
-function fuc_Redo(){
-    if(!imageViewer){return false;}
+function fuc_Redo() {
+    if (!imageViewer) {
+        return false;
+    }
     imageViewer.Redo();
 }
 
 imageViewer._defaultFileInput.accept += ',image/tiff,application/pdf';
 
-var getCvsFromTif = function(blob, handlePromise){
-    return new Promise(function(resolve, reject){
-        if(self.Tiff){
+var getCvsFromTif = function (blob, handlePromise) {
+    return new Promise(function (resolve, reject) {
+        if (self.Tiff) {
             resolve();
-        }else{
+        } else {
             console.log('loading tiff component...');
             var script = document.createElement('script');
             script.src = 'js/tiff.min.js';
-            self.onTiffJsLoadSuccess = function(){
+            self.onTiffJsLoadSuccess = function () {
                 //initialize with 100MB for large files
                 Tiff.initialize({
                     TOTAL_MEMORY: 100000000
                 });
                 resolve();
             };
-            script.onerror = function(ex){
+            script.onerror = function (ex) {
                 //tudo test it
                 reject(script.error || ex || 'load tiff js fail');
             };
             document.body.appendChild(script);
         }
-    }).then(function(){
+    }).then(function () {
         console.log('parsing the tiff...');
-        return new Promise(function(resolve, reject){
+        return new Promise(function (resolve, reject) {
             var fr = new FileReader();
-            fr.onload = function(){
+            fr.onload = function () {
                 resolve(fr.result);
             };
-            fr.onerror = function(){
+            fr.onerror = function () {
                 reject(fr.error);
             };
             fr.readAsArrayBuffer(blob);
         });
-    }).then(function(arrayBuffer){
+    }).then(function (arrayBuffer) {
         var tiff = new Tiff({
             buffer: arrayBuffer
         });
         var taskQueue = new TaskQueue();
         for (var j = 0, len = tiff.countDirectory(); j < len; ++j) {
             //taskQueue.push(function(j){
-                tiff.setDirectory(j);
-                handlePromise(tiff.toCanvas()).then(function(){
-                    taskQueue.next();
-                });
+            tiff.setDirectory(j);
+            handlePromise(tiff.toCanvas()).then(function () {
+                taskQueue.next();
+            });
             //},null,[j]);
         }
         // return new Promise(function(resolve){
@@ -199,45 +236,45 @@ var getCvsFromTif = function(blob, handlePromise){
     });
 };
 
-var getCvsFromPdf = function(blob, handlePromise){
-    return new Promise(function(resolve, reject){
-        if(self.pdfjsLib){
+var getCvsFromPdf = function (blob, handlePromise) {
+    return new Promise(function (resolve, reject) {
+        if (self.pdfjsLib) {
             resolve();
-        }else{
+        } else {
             console.log('loading pdf component...');
             var script = document.createElement('script');
             script.src = 'js/pdf.js';
-            self.onPdfJsLoadSuccess = function(){
+            self.onPdfJsLoadSuccess = function () {
                 self.pdfjsLib = window['pdfjs-dist/build/pdf'];
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.js';
                 resolve();
             };
-            script.onerror = function(ex){
+            script.onerror = function (ex) {
                 //tudo test it
                 reject(script.error || ex || 'load pdf js fail');
             };
             document.body.appendChild(script);
         }
-    }).then(function(){
+    }).then(function () {
         console.log('parsing the pdf...');
-        return new Promise(function(resolve, reject){
+        return new Promise(function (resolve, reject) {
             var fr = new FileReader();
-            fr.onload = function(){
+            fr.onload = function () {
                 resolve(fr.result);
             };
-            fr.onerror = function(){
+            fr.onerror = function () {
                 reject(fr.error);
             };
             fr.readAsArrayBuffer(blob);
         });
-    }).then(function(arrayBuffer){
+    }).then(function (arrayBuffer) {
         return pdfjsLib.getDocument(arrayBuffer);
-    }).then(function(pdf){
-        return new Promise(function(resolve, reject){
+    }).then(function (pdf) {
+        return new Promise(function (resolve, reject) {
             var cvsAry = new Array();
-            for(var i = 1; i<= pdf.numPages; i++){
+            for (var i = 1; i <= pdf.numPages; i++) {
                 var cvs = null;
-                pdf.getPage(i).then(function(page){
+                pdf.getPage(i).then(function (page) {
                     var viewport = page.getViewport(1);
                     cvs = document.createElement('canvas');
                     cvs.width = viewport.width;
@@ -253,13 +290,13 @@ var getCvsFromPdf = function(blob, handlePromise){
                         canvasContext: ctx,
                         viewport: viewport
                     });
-                }).then(function(){
+                }).then(function () {
                     resolve(cvsAry);
-                })['catch'](function(ex){
+                })['catch'](function (ex) {
                     reject(ex);
                 });
             }
-        }).then(function(cvsAry){
+        }).then(function (cvsAry) {
             console.log(cvsAry);
             imageViewer.LoadImageEx(cvsAry);
 
@@ -268,12 +305,12 @@ var getCvsFromPdf = function(blob, handlePromise){
             //     cvsAry[i].toBlob(function(blob) {
             //         var newImg = document.createElement("img"),
             //             url = URL.createObjectURL(blob);
-                  
+
             //         newImg.onload = function() {
             //           // no longer need to read the blob so it's revoked
             //           URL.revokeObjectURL(url);
             //         };
-                  
+
             //         newImg.src = url;
             //         document.body.appendChild(newImg);
             //       });
@@ -284,33 +321,33 @@ var getCvsFromPdf = function(blob, handlePromise){
     })
 };
 
-self.addImageFromUrlWithPdfTiffAsync = imageViewer.beforeAddImgFromFileChooseWindow = imageViewer.beforeAddImgFromDropFile = function(src, callback){
+self.addImageFromUrlWithPdfTiffAsync = imageViewer.beforeAddImgFromFileChooseWindow = imageViewer.beforeAddImgFromDropFile = function (src, callback) {
     var files = null;
-    if(typeof src == "string" || src instanceof String){
+    if (typeof src == "string" || src instanceof String) {
         // url
         files = ['placeholder'];
-        lib.convertURLToBlob(src, function(blob){
+        lib.convertURLToBlob(src, function (blob) {
             files = [blob];
         });
 
-    }else{
+    } else {
         // input || drop 
         files = src.target.files || src.dataTransfer.files;
     }
-    for(var i = 0; i < files.length; ++i){
+    for (var i = 0; i < files.length; ++i) {
         //taskQueue.push(function(i){
-            var file = files[i];
-            if('image/tiff' == file.type){
-                getCvsFromTif(file, imageViewer.LoadImageEx);
-            }else if('application/pdf' == file.type){
-                getCvsFromPdf(file, imageViewer.LoadImageEx);
-            }else{
-                imageViewer.LoadImageEx(file);
-            }
+        var file = files[i];
+        if ('image/tiff' == file.type) {
+            getCvsFromTif(file, imageViewer.LoadImageEx);
+        } else if ('application/pdf' == file.type) {
+            getCvsFromPdf(file, imageViewer.LoadImageEx);
+        } else {
+            imageViewer.LoadImageEx(file);
+        }
         //}, null, [i]);
     }
     // callback
-    if(callback){
+    if (callback) {
         callback();
     }
 };

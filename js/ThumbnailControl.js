@@ -1,6 +1,7 @@
-(function (DL,MBC) {
+(function (DL, MBC) {
 	"use strict";
-	var lib = DL;	
+	var lib = DL;
+
 	function ThumbnailControl(cfg) {
 		var _this = this;
 
@@ -20,7 +21,7 @@
 		_this.canvasWidth = 0;
 		_this.canvasHeight = 0;
 
-		_this.borderWidth = 1;	// 暂时为1, 不要改
+		_this.borderWidth = 1; // 暂时为1, 不要改
 		_this.borderColor = '#DDDDDD';
 		_this.selectionBorderColor = '#7DA2CE';
 		_this.backgroundColor = '#FFFFFF';
@@ -51,7 +52,7 @@
 		_this.thumbnailImagesPerRow = 3;
 
 		_this.attachImage = false;
-		
+
 		// init
 		_this.__init(cfg);
 	}
@@ -59,13 +60,14 @@
 	// Method
 	// 初始化
 	ThumbnailControl.prototype.__init = function (cfg) {
-		var _this = this, doc = window.document;
+		var _this = this,
+			doc = window.document;
 
 		_this.viewer = cfg.viewer;
 		_this.Top = _this.viewer.ThumbnailImageMargin;
 		_this.Left = _this.viewer.ThumbnailImageMargin;
 
-		_this.thumbnailImagesPerRow = (_this.viewer.thumbnailImagesPerRow > 2)?(_this.viewer.thumbnailImagesPerRow):3;;
+		_this.thumbnailImagesPerRow = (_this.viewer.thumbnailImagesPerRow > 2) ? (_this.viewer.thumbnailImagesPerRow) : 3;;
 		_this._width = _this.viewer.ThumbnailControlW;
 		_this._height = _this.viewer.ThumbnailControlH;
 		_this.canvasWidth = _this._width;
@@ -73,7 +75,7 @@
 
 		_this.imageUrl = cfg.imageUrl;
 		_this.cIndex = cfg.index;
-		
+
 		_this.thumbOut = doc.createElement('div');
 		_this.thumbOut.style.display = 'inline-block';
 		_this.thumbOut.style.width = _this._width + 2 + 'px';
@@ -92,17 +94,17 @@
 
 		_this.thumbOut.appendChild(_this.thumbCanvas);
 
-		lib.addEvent(_this.thumbOut,"click", function(){
+		lib.addEvent(_this.thumbOut, "click", function () {
 			_this.viewer.ShowImage(_this.cIndex);
 		});
 
-		lib.addEvent(_this.thumbOut,"mouseenter", function(){
+		lib.addEvent(_this.thumbOut, "mouseenter", function () {
 			_this.bMouseHovering = true;
 			if (_this.bSelect) return;
 			_this.Show();
 		});
 
-		lib.addEvent(_this.thumbOut,"mouseout", function(){
+		lib.addEvent(_this.thumbOut, "mouseout", function () {
 			_this.bMouseHovering = false;
 			if (_this.bSelect) return;
 			_this.Show();
@@ -150,16 +152,16 @@
 	};
 
 	// 设置控件位置
-	ThumbnailControl.prototype.SetLocation = function (x, y) {
+	ThumbnailControl.prototype.SetLocation = function (l, t) {
 		var _this = this;
-		_this.Left = x;
-		_this.Top = y;
-		
+		_this.Left = l;
+		_this.Top = t;
+
 		if (_this.thumbOut) {
 			if (_this.thumbOut.parentNode)
 				_this.thumbOut.parentNode.style.position = "relative";
-			_this.thumbOut.style.left = x + 'px';
-			_this.thumbOut.style.top = y + 'px';
+			_this.thumbOut.style.left = l + 'px';
+			_this.thumbOut.style.top = t + 'px';
 		}
 
 		return true;
@@ -183,9 +185,13 @@
 		return this._width;
 	};
 
+	ThumbnailControl.prototype.GetControlHeight = function () {
+		return this._height;
+	};
+
 	ThumbnailControl.prototype.SetIndex = function (index) {
 		var _this = this;
-		if(lib.isNumber(index) && index>=0)
+		if (lib.isNumber(index) && index >= 0)
 			_this.cIndex = index;
 		else
 			_this.cIndex = -1;
@@ -194,7 +200,7 @@
 
 	// 清空图片，显示Loading...
 	ThumbnailControl.prototype.ClearImage = function () {
-		var _this = this;	
+		var _this = this;
 
 		_this.objImage = false;
 
@@ -205,7 +211,8 @@
 
 	// 重新显示图片
 	ThumbnailControl.prototype.Show = function (bShowFromScrollEvent) {
-		var _this = this, ctx;
+		var _this = this,
+			ctx;
 
 		if (_this.bVisible) {
 			_this.thumbOut.style.display = 'inline-block';
@@ -269,14 +276,14 @@
 
 		if (_this.objImage) {
 
-			if(_this.attachImage){
+			if (_this.attachImage) {
 				_this.thumbOut.style.position = 'relative';
 				_this.objImage.style.position = 'absolute';
 				_this.objImage.style.top = Math.floor(_this.drawArea.y) + 'px';
 				_this.objImage.style.left = Math.floor(_this.drawArea.x) + 'px';
 
 				_this.thumbOut.appendChild(_this.objImage);
-			}else{
+			} else {
 				ctx.drawImage(_this.objImage, Math.floor(_this.drawArea.x), Math.floor(_this.drawArea.y), _this.drawArea.width, _this.drawArea.height);
 			}
 
@@ -309,7 +316,7 @@
 		return true;
 	};
 
-	ThumbnailControl.prototype.Refresh= function () {
+	ThumbnailControl.prototype.Refresh = function () {
 		var _this = this;
 
 		_this.__getImageByUrl();
@@ -329,20 +336,20 @@
 	// 计算 ThumbnailControl 里实际显示 image 的宽高
 	ThumbnailControl.prototype.__fitImage = function () {
 		var _this = this;
-		var canvasAspectRatio = _this.canvasWidth/_this.canvasHeight;
-		var imageAspectRatio = _this._origImageWidth/_this._origImageHeight;
-		if(canvasAspectRatio>imageAspectRatio){
+		var canvasAspectRatio = _this.canvasWidth / _this.canvasHeight;
+		var imageAspectRatio = _this._origImageWidth / _this._origImageHeight;
+		if (canvasAspectRatio > imageAspectRatio) {
 			_this.drawArea.height = _this.canvasHeight;
-			_this.drawArea.width = imageAspectRatio*_this.canvasHeight;
+			_this.drawArea.width = imageAspectRatio * _this.canvasHeight;
 
-			_this.drawArea.x = Math.floor((_this.canvasWidth-_this.drawArea.width)/2);
+			_this.drawArea.x = Math.floor((_this.canvasWidth - _this.drawArea.width) / 2);
 			_this.drawArea.y = 0;
-		}else{
+		} else {
 			_this.drawArea.width = _this.canvasWidth;
-			_this.drawArea.height = _this.drawArea.width/imageAspectRatio;
+			_this.drawArea.height = _this.drawArea.width / imageAspectRatio;
 
 			_this.drawArea.x = 0;
-			_this.drawArea.y = Math.floor((_this.canvasHeight-_this.drawArea.height)/2);
+			_this.drawArea.y = Math.floor((_this.canvasHeight - _this.drawArea.height) / 2);
 		}
 	}
 
@@ -393,4 +400,4 @@
 
 	MBC.ThumbnailControl = ThumbnailControl;
 
-})(Alvin.MBC.Lib,Alvin.MBC);
+})(Alvin.MBC.Lib, Alvin.MBC);

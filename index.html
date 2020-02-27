@@ -1,52 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset='utf-8'>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>ImageViewer</title>
     <link rel="stylesheet" type="text/css" href="css/cssResetH5.css" />
     <link rel="stylesheet" type="text/css" href="css/mbc.css" />
     <script type="text/javascript">
-    	var Alvin = Alvin || {};
+        var Alvin = Alvin || {};
     </script>
 </head>
+
 <body>
     <div id="main">
-        <div id="toggleTool">APIs</div>
-        <ul id="toolGrp">
-            <li><button onclick="fuc_LoadImage()">LoadImage</button></li>
-            <!--
-            <li><button onclick="fuc_getImage()">getImage</button></li>
-            <li><button onclick="fuc_deleteImage()">deleteImage</button></li>
-            <li><button onclick="fuc_changePage('p')">previous</button></li>
-            <li><button onclick="fuc_changePage('n')">next</button></li>
-            <li><button onclick="fuc_changePage('f')">front</button></li>
-            <li><button onclick="fuc_changePage('l')">last</button></li>
-            <li><button onclick="fuc_download()">download</button></li>
-            -->
-            <li class="visible_inView"><button onclick="fuc_showVideo()">show video</button></li>
-            <li class="visible_inView"><button onclick="fuc_ShowImageEditor()">edit</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_CloseImageEditor()">cancel</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_rotateLeft()">RotateLeft</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_rotateRight()">RotateRight</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_rotate180()">Rotate180</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_rotateMirror()">Mirror</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_rotateFlip()">Flip</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_Crop()">Crop</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_Save()">Save</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_Undo()">Undo</button></li>
-            <li class="visible_inEdit"><button onclick="fuc_Redo()">Redo</button></li>
-            <li class="visible_inView"><button onclick="fuc_RemoveCurrentImage()">Remove Selected Image</button></li>
-            <li class="visible_inView"><button onclick="fuc_RemoveAllImages()">Remove All Images</button></li>
-        </ul>
+        <div id="topToolGrp">
+            <div class="lt visible_inView"><button onclick="fuc_LoadImage()">LoadImage</button><button
+                    onclick="fuc_showVideo()">show
+                    video</button><button onclick="fuc_ShowImageEditor()">edit</button></div>
+            <div class="ct visible_inEdit"><button onclick="fuc_rotateLeft()">RotateLeft</button><button
+                    onclick="fuc_rotateRight()">RotateRight</button><button onclick="fuc_rotate180()">Rotate180</button>
+                <button onclick="fuc_rotateMirror()">Mirror</button>
+                <button onclick="fuc_rotateFlip()">Flip</button>
+                <button onclick="fuc_Crop()">Crop</button>
+                <button onclick="fuc_CloseImageEditor()">cancel</button><button onclick="fuc_Save()">Save</button>
+            </div>
+            <div class="rt visible_inView"><button onclick="fuc_getImage()">Upload</button></div>
+        </div>
         <div id="imageViewer"></div>
+        <div id="btmToolGrp"><button onclick="fuc_RemoveCurrentImage()">Remove Selected
+                Image</button><button onclick="fuc_RemoveAllImages()">Remove All Images</button></div>
+    </div>
+    <div id="markLayer">
+        <!-- <img src="./images/loading.gif" alt="加载中" /> -->
+        <i class="iconfont icon-loading"></i>
+        <!-- <div class="loader">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div> -->
     </div>
 </body>
 <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
 
 
-<script type="text/javascript" src="js/common.js"></script>
+<!-- <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/exif.js"></script>
 
 <script type="text/javascript" src="js/pdf.js"></script>
@@ -59,18 +62,15 @@
 <script type="text/javascript" src="js/ImageAreaSelector.js"></script>
 <script type="text/javascript" src="js/ImageControl.js"></script>
 <script type="text/javascript" src="js/ThumbnailControl.js"></script>
-<script type="text/javascript" src="js/ImageViewer.js"></script>
+<script type="text/javascript" src="js/ImageViewer.js"></script> -->
 
-<!--
-<script type="text/javascript" src="js/build/mbc.js?v=20190522"></script>
--->
+
+<script type="text/javascript" src="mbc.js?v=20200227"></script>
 
 <script type="text/javascript" src="js/opration.js?v=20190522"></script>
 <script>
     $(".visible_inEdit").hide();
     $(".visible_inView").show();
-    $("#toggleTool").click(function(){
-        $("#toolGrp").slideToggle();
-    });
 </script>
+
 </html>

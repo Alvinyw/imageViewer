@@ -1,53 +1,50 @@
-(function (DL,MBC) {
+(function (DL, MBC) {
     "use strict";
     var lib = DL;
-    function ImageAreaSelector(cfg){
+
+    function ImageAreaSelector(cfg) {
         var _this = this;
         var containerDiv = [
-                '<div class="kPainterCroper" style="display:none;">',
-                    '<div class="kPainterCells">',
-                        '<div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>',
-                    '</div',
-                    '><div class="kPainterBigMover" data-orient="0,0" style="display:none"></div',
-                    '><div class="kPainterEdges">',
-                        '<div data-orient="1"></div',
-                        '><div data-orient="2"></div',
-                        '><div data-orient="3"></div',
-                        '><div data-orient="4"></div>',
-                    '</div',
-                    '><div class="kPainterCorners">',
-                        '<div data-orient="5"><i></i></div',
-                        '><div data-orient="6"><i></i></div',
-                        '><div data-orient="7"><i></i></div',
-                        '><div data-orient="8"><i></i></div>',
-                    '</div',
-                    '><div class="kPainterMover" data-orient="0,0">',
-                        '<div></div>',
-                        '<svg width="20" height="20" viewBox="0 0 1792 1792" xmlns="http://www.w3.org/2000/svg"><path d="M1792 896q0 26-19 45l-256 256q-19 19-45 19t-45-19-19-45v-128h-384v384h128q26 0 45 19t19 45-19 45l-256 256q-19 19-45 19t-45-19l-256-256q-19-19-19-45t19-45 45-19h128v-384h-384v128q0 26-19 45t-45 19-45-19l-256-256q-19-19-19-45t19-45l256-256q19-19 45-19t45 19 19 45v128h384v-384h-128q-26 0-45-19t-19-45 19-45l256-256q19-19 45-19t45 19l256 256q19 19 19 45t-19 45-45 19h-128v384h384v-128q0-26 19-45t45-19 45 19l256 256q19 19 19 45z" fill="#fff"/></svg>',
-                    '</div>',
-                '</div',
-                '><div class="kPainterPerspect" style="display:none;">',
-                    '<canvas class="kPainterPerspectCvs"></canvas',
-                    '><div class="kPainterPerspectCorner" data-index="0">lt</div',
-                    '><div class="kPainterPerspectCorner" data-index="1">rt</div',
-                    '><div class="kPainterPerspectCorner" data-index="2">rb</div',
-                    '><div class="kPainterPerspectCorner" data-index="3">lb</div>',
-                '</div',
-                '><div class="kPainterGesturePanel"></div>'
+            '<div class="kPainterCroper" style="display:none;">',
+            '<div class="kPainterCells">',
+            '<div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>',
+            '</div',
+            '><div class="kPainterBigMover" data-orient="0,0" style="display:none"></div',
+            '><div class="kPainterEdges">',
+            '<div data-orient="1"></div',
+            '><div data-orient="2"></div',
+            '><div data-orient="3"></div',
+            '><div data-orient="4"></div>',
+            '</div',
+            '><div class="kPainterCorners">',
+            '<div data-orient="5"><i></i></div',
+            '><div data-orient="6"><i></i></div',
+            '><div data-orient="7"><i></i></div',
+            '><div data-orient="8"><i></i></div>',
+            '</div>',
+            '</div',
+            '><div class="kPainterPerspect" style="display:none;">',
+            '<canvas class="kPainterPerspectCvs"></canvas',
+            '><div class="kPainterPerspectCorner" data-index="0">lt</div',
+            '><div class="kPainterPerspectCorner" data-index="1">rt</div',
+            '><div class="kPainterPerspectCorner" data-index="2">rb</div',
+            '><div class="kPainterPerspectCorner" data-index="3">lb</div>',
+            '</div',
+            '><div class="kPainterGesturePanel"></div>'
         ].join('');
-        
+
         _this.viewer = cfg.viewer;
         _this.container = cfg.container;
 
         _this.container.insertAdjacentHTML('beforeEnd', containerDiv);
-        _this.kPainterCroper = lib._querySelectorAll(_this.container,'div.kPainterCroper')[0];
+        _this.kPainterCroper = lib._querySelectorAll(_this.container, 'div.kPainterCroper')[0];
 
-        _this.kPainterCells = lib._querySelectorAll(_this.container,'div.kPainterCells > div');
+        _this.kPainterCells = lib._querySelectorAll(_this.container, 'div.kPainterCells > div');
 
         // 控件的四个顶点
-        _this.kPainterCorners = lib._querySelectorAll(_this.container,'div.kPainterCorners > div');
+        _this.kPainterCorners = lib._querySelectorAll(_this.container, 'div.kPainterCorners > div');
         // 控件的四条边框
-        _this.kPainterEdges = lib._querySelectorAll(_this.container,'div.kPainterEdges > div');
+        _this.kPainterEdges = lib._querySelectorAll(_this.container, 'div.kPainterEdges > div');
 
         _this.bVisible = false;
         _this.isAutoShowCropUI = true;
@@ -55,7 +52,7 @@
 
         // 是否选中可拖拽的边或点
         _this.dragging = false;
-        
+
         // 控件的最大宽高
         _this.maxWidth = 0;
         _this.maxHeight = 0;
@@ -102,32 +99,34 @@
 
     }
 
-    ImageAreaSelector.prototype.__Init = function(){
+    ImageAreaSelector.prototype.__Init = function () {
         var _this = this;
 
         // 给控件四条边和四个角添加响应点击事件
-        for(var i=0;i<4;i++){
-            lib.addEvent([_this.kPainterCorners[i],_this.kPainterEdges[i]],"mousedown touchstart", fuc_touchstart);
+        for (var i = 0; i < 4; i++) {
+            lib.addEvent([_this.kPainterCorners[i], _this.kPainterEdges[i]], "mousedown touchstart", fuc_touchstart);
         }
 
-        function fuc_touchstart(event){
+        function fuc_touchstart(event) {
             var ev = event || window.event;
             lib.stopDefault(ev);
 
             _this.dragging = true;
 
-            lib.addEvent(_this.container,"mousemove touchmove", fuc_touchmove);
-            lib.addEvent(_this.container,"mouseleave mouseup touchend", fuc_touchend);
+            lib.addEvent(_this.container, "mousemove touchmove", fuc_touchmove);
+            lib.addEvent(_this.container, "mouseleave mouseup touchend", fuc_touchend);
 
             var touches = ev.changedTouches;
 
-            var curX,curY;
-            if(touches){
+            var curX, curY;
+            if (touches) {
                 //Multi-contact is prohibited
-                if(touches.length!=1){return false;}
+                if (touches.length != 1) {
+                    return false;
+                }
                 curX = touches[0].pageX;
                 curY = touches[0].pageY;
-            }else{
+            } else {
                 curX = ev.clientX;
                 curY = ev.clientY;
             }
@@ -141,109 +140,108 @@
                 top: _this.drawArea.y
             }
 
-        } 
+        }
 
-        function fuc_touchmove(event){
+        function fuc_touchmove(event) {
             var ev = event || window.event;
             lib.stopDefault(ev);
-            if(!_this.dragging) return;
+            if (!_this.dragging) return;
             var touches = ev.changedTouches;
             var sp = _this._startPos;
 
-            if(touches){
+            if (touches) {
                 var _curOffsetX = touches[0].pageX - sp.startX,
                     _curOffsetY = touches[0].pageY - sp.startY;
-            }else{
+            } else {
                 var _curOffsetX = ev.clientX - sp.startX,
                     _curOffsetY = ev.clientY - sp.startY;
             }
 
             // 控件的实时位置和大小信息
-            var curW,curH,curL,curT;
+            var curW, curH, curL, curT;
 
-            switch(sp.targetNode)
-            {
-            case 1:
-                // 拖拽 左侧边框
-                curW = (sp.width-_curOffsetX)>(sp.left + sp.width)?(sp.left + sp.width):(sp.width-_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width-_curOffsetX);
-                curH = sp.height;
-                curL = sp.left + sp.width - curW;
-                curT = sp.top;
-                break;
-            case 2:
-                // 拖拽 上侧边框
-                curW = sp.width;
-                curH = (sp.height-_curOffsetY)>(sp.top + sp.height)?(sp.top + sp.height):(sp.height-_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height-_curOffsetY);
-                curL = sp.left;
-                curT = sp.top + sp.height - curH;
-                break;
-            case 3:
-                // 拖拽 右侧边框
-                curW = (sp.width+_curOffsetX)>(_this.maxWidth-sp.left)?(_this.maxWidth-sp.left):(sp.width+_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width+_curOffsetX);
-                curH = sp.height;
-                curL = sp.left;
-                curT = sp.top;
-                break;
-            case 4:
-                // 拖拽 下侧边框
-                curW = sp.width;
-                curH = (sp.height+_curOffsetY)>(_this.maxHeight-sp.top)?(_this.maxHeight-sp.top):(sp.height+_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height+_curOffsetY);
-                curL = sp.left;
-                curT = sp.top;
-                break;
-            case 5:
-                // 拖拽 左上顶点
-                curW = (sp.width-_curOffsetX)>(sp.left + sp.width)?(sp.left + sp.width):(sp.width-_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width-_curOffsetX);
-                curH = (sp.height-_curOffsetY)>(sp.top + sp.height)?(sp.top + sp.height):(sp.height-_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height-_curOffsetY);
-                curL = sp.left + sp.width - curW;
-                curT = sp.top + sp.height - curH;
-                break;
-            case 6:
-                // 拖拽 右上顶点
-                curW = (sp.width+_curOffsetX)>(_this.maxWidth-sp.left)?(_this.maxWidth-sp.left):(sp.width+_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width+_curOffsetX);
-                curH = (sp.height-_curOffsetY)>(sp.top + sp.height)?(sp.top + sp.height):(sp.height-_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height-_curOffsetY);
-                curL = sp.left;
-                curT = sp.top + sp.height - curH;
-                break;
-            case 7:
-                // 拖拽 右下顶点
-                curW = (sp.width+_curOffsetX)>(_this.maxWidth-sp.left)?(_this.maxWidth-sp.left):(sp.width+_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width+_curOffsetX);
-                curH = (sp.height+_curOffsetY)>(_this.maxHeight-sp.top)?(_this.maxHeight-sp.top):(sp.height+_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height+_curOffsetY);
-                curL = sp.left;
-                curT = sp.top;
-                break;
-            case 8:
-                // 拖拽 左下顶点
-                curW = (sp.width-_curOffsetX)>(sp.left + sp.width)?(sp.left + sp.width):(sp.width-_curOffsetX)<_this.minWidth?_this.minWidth:(sp.width-_curOffsetX);
-                curH = (sp.height+_curOffsetY)>(_this.maxHeight-sp.top)?(_this.maxHeight-sp.top):(sp.height+_curOffsetY)<_this.minHeight?_this.minHeight:(sp.height+_curOffsetY);
-                curL = sp.left + sp.width - curW;
-                curT = sp.top;
-                break;
-            default:
-                return;
+            switch (sp.targetNode) {
+                case 1:
+                    // 拖拽 左侧边框
+                    curW = (sp.width - _curOffsetX) > (sp.left + sp.width) ? (sp.left + sp.width) : (sp.width - _curOffsetX) < _this.minWidth ? _this.minWidth : (sp.width - _curOffsetX);
+                    curH = sp.height;
+                    curL = sp.left + sp.width - curW;
+                    curT = sp.top;
+                    break;
+                case 2:
+                    // 拖拽 上侧边框
+                    curW = sp.width;
+                    curH = (sp.height - _curOffsetY) > (sp.top + sp.height) ? (sp.top + sp.height) : (sp.height - _curOffsetY) < _this.minHeight ? _this.minHeight : (sp.height - _curOffsetY);
+                    curL = sp.left;
+                    curT = sp.top + sp.height - curH;
+                    break;
+                case 3:
+                    // 拖拽 右侧边框
+                    curW = (sp.width + _curOffsetX) > (_this.maxWidth - sp.left) ? (_this.maxWidth - sp.left) : (sp.width + _curOffsetX) < _this.minWidth ? _this.minWidth : (sp.width + _curOffsetX);
+                    curH = sp.height;
+                    curL = sp.left;
+                    curT = sp.top;
+                    break;
+                case 4:
+                    // 拖拽 下侧边框
+                    curW = sp.width;
+                    curH = (sp.height + _curOffsetY) > (_this.maxHeight - sp.top) ? (_this.maxHeight - sp.top) : (sp.height + _curOffsetY) < _this.minHeight ? _this.minHeight : (sp.height + _curOffsetY);
+                    curL = sp.left;
+                    curT = sp.top;
+                    break;
+                case 5:
+                    // 拖拽 左上顶点
+                    curW = (sp.width - _curOffsetX) > (sp.left + sp.width) ? (sp.left + sp.width) : (sp.width - _curOffsetX) < _this.minWidth ? _this.minWidth : (sp.width - _curOffsetX);
+                    curH = (sp.height - _curOffsetY) > (sp.top + sp.height) ? (sp.top + sp.height) : (sp.height - _curOffsetY) < _this.minHeight ? _this.minHeight : (sp.height - _curOffsetY);
+                    curL = sp.left + sp.width - curW;
+                    curT = sp.top + sp.height - curH;
+                    break;
+                case 6:
+                    // 拖拽 右上顶点
+                    curW = (sp.width + _curOffsetX) > (_this.maxWidth - sp.left) ? (_this.maxWidth - sp.left) : (sp.width + _curOffsetX) < _this.minWidth ? _this.minWidth : (sp.width + _curOffsetX);
+                    curH = (sp.height - _curOffsetY) > (sp.top + sp.height) ? (sp.top + sp.height) : (sp.height - _curOffsetY) < _this.minHeight ? _this.minHeight : (sp.height - _curOffsetY);
+                    curL = sp.left;
+                    curT = sp.top + sp.height - curH;
+                    break;
+                case 7:
+                    // 拖拽 右下顶点
+                    curW = (sp.width + _curOffsetX) > (_this.maxWidth - sp.left) ? (_this.maxWidth - sp.left) : (sp.width + _curOffsetX) < _this.minWidth ? _this.minWidth : (sp.width + _curOffsetX);
+                    curH = (sp.height + _curOffsetY) > (_this.maxHeight - sp.top) ? (_this.maxHeight - sp.top) : (sp.height + _curOffsetY) < _this.minHeight ? _this.minHeight : (sp.height + _curOffsetY);
+                    curL = sp.left;
+                    curT = sp.top;
+                    break;
+                case 8:
+                    // 拖拽 左下顶点
+                    curW = (sp.width - _curOffsetX) > (sp.left + sp.width) ? (sp.left + sp.width) : (sp.width - _curOffsetX) < _this.minWidth ? _this.minWidth : (sp.width - _curOffsetX);
+                    curH = (sp.height + _curOffsetY) > (_this.maxHeight - sp.top) ? (_this.maxHeight - sp.top) : (sp.height + _curOffsetY) < _this.minHeight ? _this.minHeight : (sp.height + _curOffsetY);
+                    curL = sp.left + sp.width - curW;
+                    curT = sp.top;
+                    break;
+                default:
+                    return;
             }
 
             _this.__updateDrawArea(curW, curH, curL, curT);
-            
-        } 
 
-        function fuc_touchend(event){
+        }
+
+        function fuc_touchend(event) {
             var ev = event || window.event;
             lib.stopDefault(ev);
-            if(!_this.dragging) return;
+            if (!_this.dragging) return;
             _this.dragging = false;
 
-            lib.removeEvent(_this.container,"mousemove touchmove", fuc_touchmove);
-            lib.removeEvent(_this.container,"mouseleave mouseup touchend", fuc_touchend);
+            lib.removeEvent(_this.container, "mousemove touchmove", fuc_touchmove);
+            lib.removeEvent(_this.container, "mouseleave mouseup touchend", fuc_touchend);
         }
     }
 
-    ImageAreaSelector.prototype.SetVisible = function(bVisible){
+    ImageAreaSelector.prototype.SetVisible = function (bVisible) {
         var _this = this;
-        if(bVisible){
+        if (bVisible) {
             _this.bVisible = true;
             _this.kPainterCroper.style.display = '';
-        }else{
+        } else {
             _this.bVisible = false;
             _this.kPainterCroper.style.display = 'none';
         }
@@ -251,27 +249,27 @@
         return true;
     }
 
-    ImageAreaSelector.prototype.ShowCropRect = function(){
+    ImageAreaSelector.prototype.ShowCropRect = function () {
         var _this = this;
-        if(_this.viewer.mode != 'edit') return;
+        if (_this.viewer.mode != 'edit') return;
         _this.isCropRectShowing = true;
         _this.SetVisible(true);
 
-        if(!_this.viewer.isSwitchedWH){
+        if (!_this.viewer.isSwitchedWH) {
             _this.maxWidth = _this.viewer._canvasArea.width;
             _this.maxHeight = _this.viewer._canvasArea.height;
-        }else{
+        } else {
             _this.maxWidth = _this.viewer._canvasArea.height;
             _this.maxHeight = _this.viewer._canvasArea.width;
         }
-        _this.minLeft = (_this.viewer._imgContainerW -_this.maxWidth)/2;
-        _this.minTop = (_this.viewer._imgContainerH -_this.maxHeight)/2;
+        _this.minLeft = (_this.viewer._imgContainerW - _this.maxWidth) / 2;
+        _this.minTop = (_this.viewer._imgContainerH - _this.maxHeight) / 2;
 
         _this.__updateDrawArea(_this.maxWidth, _this.maxHeight, 0, 0);
         return true;
     }
 
-    ImageAreaSelector.prototype.HideCropRect = function(){
+    ImageAreaSelector.prototype.HideCropRect = function () {
         var _this = this;
         _this.isCropRectShowing = false;
         _this.SetVisible(false);
@@ -279,7 +277,7 @@
         return true;
     }
 
-    ImageAreaSelector.prototype.__updateDrawArea = function(w,h,x,y) {
+    ImageAreaSelector.prototype.__updateDrawArea = function (w, h, x, y) {
         var _this = this;
 
         _this.drawArea.width = w;
@@ -287,10 +285,10 @@
         _this.drawArea.x = x;
         _this.drawArea.y = y;
 
-        _this.__updatePosition(w,h,x+_this.minLeft,y+_this.minTop);
+        _this.__updatePosition(w, h, x + _this.minLeft, y + _this.minTop);
     }
 
-    ImageAreaSelector.prototype.__updatePosition = function(w,h,l,t) {
+    ImageAreaSelector.prototype.__updatePosition = function (w, h, l, t) {
         var _this = this;
         _this.left = l;
         _this.top = t;
@@ -298,13 +296,14 @@
         _this.kPainterCroper.style.width = w + 'px';
         _this.kPainterCroper.style.height = h + 'px';
         _this.kPainterCroper.style.left = _this.left + 'px';
-        _this.kPainterCroper.style.top = _this.top + 'px';    
+        _this.kPainterCroper.style.top = _this.top + 'px';
         return true;
     }
 
-    ImageAreaSelector.prototype.__getCropArea = function(){
-        var _this = this,curCropRect,
-             _x = _this.drawArea.x / _this.maxWidth,
+    ImageAreaSelector.prototype.__getCropArea = function () {
+        var _this = this,
+            curCropRect,
+            _x = _this.drawArea.x / _this.maxWidth,
             _y = _this.drawArea.y / _this.maxHeight,
             _w = _this.drawArea.width / _this.maxWidth,
             _h = _this.drawArea.height / _this.maxHeight;
@@ -321,4 +320,4 @@
 
     MBC.ImageAreaSelector = ImageAreaSelector;
 
-})(Alvin.MBC.Lib,Alvin.MBC);
+})(Alvin.MBC.Lib, Alvin.MBC);

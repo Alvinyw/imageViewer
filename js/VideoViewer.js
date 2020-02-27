@@ -100,6 +100,7 @@
             var oldVal = _this.cameraSel.value;
             _this.cameraSel.innerHTML = "";
             var selOpt = undefined;
+            window.console.log(deviceInfos,"deviceInfos")
             for(var i = 0; i < deviceInfos.length; ++i){
                 var info = deviceInfos[i];
                 if(info.kind != 'videoinput'){
