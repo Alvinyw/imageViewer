@@ -1,7 +1,7 @@
 # imageViewer
 一款基于 Html5、Canvas 的图片编辑器
 
-## 一、ImageViewer 的 Apis
+## 一、ImageViewer 的 APIs
 
 ### 基本功能
 1. `LoadImageEx(imgData)`：从本地 load 图片；
