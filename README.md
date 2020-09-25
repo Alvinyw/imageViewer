@@ -1,29 +1,7 @@
 # imageViewer
 一款基于 Html5、Canvas 的图片编辑器
 
-## 一、通过 script 脚本引入
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="stylesheet" type="text/css" href="css/cssResetH5.css" />
-    <link rel="stylesheet" type="text/css" href="css/mbc.css" />
-    <script type="text/javascript">
-        var Alvin = Alvin || {};
-    </script>
-</head>
-
-<body>
-    <div id="imageViewer"></div>
-</body>
-<script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
-<script type="text/javascript" src="mbc.js?v=20200227"></script>
-<script type="text/javascript" src="js/opration.js?v=20190522"></script>
-</html>
-```
-
-## 二、通过 Node 引用
+## 一、通过 Node 引用
 
 ```js
 npm i alvin-imageviewer
@@ -64,6 +42,28 @@ export default {
   },
 };
 </script>
+```
+
+## 二、通过 script 脚本引入
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="css/cssResetH5.css" />
+    <link rel="stylesheet" type="text/css" href="css/mbc.css" />
+    <script type="text/javascript">
+        var Alvin = Alvin || {};
+    </script>
+</head>
+
+<body>
+    <div id="imageViewer"></div>
+</body>
+<script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="mbc.js?v=20200227"></script>
+<script type="text/javascript" src="js/opration.js?v=20190522"></script>
+</html>
 ```
 
 ## 三、ImageViewer 的 APIs
