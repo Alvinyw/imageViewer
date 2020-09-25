@@ -3,7 +3,7 @@
 
 ## 一、通过 script 脚本引入
 
-```js
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,7 +30,7 @@ npm i alvin-imageviewer
 ```
 
 在 VUE 的 SPA 中的使用示例：
-```js
+```html
 <template>
   <div id="main">
     <a href="javascript:void(0)" @click="fuc_LoadImage">LoadImage</a>
