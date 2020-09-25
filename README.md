@@ -1,7 +1,101 @@
 # imageViewer
 一款基于 Html5、Canvas 的图片编辑器
 
-## 一、ImageViewer 的 APIs
+## 一、通过 script 脚本引入
+
+```js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="css/cssResetH5.css" />
+    <link rel="stylesheet" type="text/css" href="css/mbc.css" />
+    <script type="text/javascript">
+        var Alvin = Alvin || {};
+    </script>
+</head>
+
+<body>
+    <div id="main">
+        <div id="topToolGrp">
+            <div class="lt visible_inView">
+                <button onclick="fuc_LoadImage()">LoadImage</button>
+                <button onclick="fuc_showVideo()">show video</button>
+                <button onclick="fuc_ShowImageEditor()">edit</button>
+            </div>
+            <div class="ct visible_inEdit">
+                <button onclick="fuc_rotateLeft()">RotateLeft</button>
+                <button onclick="fuc_rotateRight()">RotateRight</button>
+                <button onclick="fuc_rotate180()">Rotate180</button>
+                <button onclick="fuc_rotateMirror()">Mirror</button>
+                <button onclick="fuc_rotateFlip()">Flip</button>
+                <button onclick="fuc_Crop()">Crop</button>
+                <button onclick="fuc_CloseImageEditor()">cancel</button><button onclick="fuc_Save()">Save</button>
+            </div>
+            <div class="rt visible_inView"><button onclick="fuc_getImage()">Upload</button></div>
+        </div>
+        <div id="imageViewer"></div>
+        <div id="btmToolGrp">
+            <button onclick="fuc_RemoveCurrentImage()">Remove Selected Image</button>
+            <button onclick="fuc_RemoveAllImages()">Remove All Images</button>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="mbc.js?v=20200227"></script>
+<script type="text/javascript" src="js/opration.js?v=20190522"></script>
+<script>
+    $(".visible_inEdit").hide();
+    $(".visible_inView").show();
+</script>
+
+</html>
+```
+
+## 二、通过 Node 引用
+
+```js
+npm i alvin-imageviewer
+```
+
+在 VUE 的 SPA 中的使用示例：
+```js
+<template>
+  <div id="main">
+    <a href="javascript:void(0)" @click="fuc_LoadImage">LoadImage</a>
+    <div id="imageViewer"></div>
+  </div>
+</template>
+<script>
+import createImageViewer from "alvin-imageviewer";
+export default {
+  name: "ImageViewer",
+  data() {
+    return {
+      imageViewer: "",
+    };
+  },
+  mounted() {
+    var cfg = {
+      ContainerId: "imageViewer",
+      Width: "1000px",
+      Height: "1000px",
+    };
+    this.imageViewer = createImageViewer(cfg);
+  },
+  methods: {
+    fuc_LoadImage() {
+      if (!this.imageViewer) {
+        return false;
+      }
+
+      this.imageViewer.LoadImageEx();
+    },
+  },
+};
+</script>
+```
+
+## 三、ImageViewer 的 APIs
 
 ### 基本功能
 1. `LoadImageEx(imgData)`：从本地 load 图片；
@@ -10,15 +104,15 @@
 4. `RemoveAllSelectedImages()`：删除当前选中的图片；
 5. `ShowImage(index)`：显示索引为 index 的图片；
 6. `ChangePage(cmd)`：
-```js
-switch(cmd){
-    case "f": 显示第一张图片;
-    case "p": 显示上一张图片;
-    case "n": 显示下一张图片;
-    case "l": 显示最后一张图片;
-    default: 不变
-}
-```
+    ```js
+    switch(cmd){
+        case "f": 显示第一张图片;
+        case "p": 显示上一张图片;
+        case "n": 显示下一张图片;
+        case "l": 显示最后一张图片;
+        default: 不变
+    }
+    ```
 7. `GetCurentIndex()`：获取当前图片的索引；
 8. `GetCount()`：获取 ImageViewer 中的图片总数；
 9. `GetImage(index,isOri)`：获取索引为 index 的图片，当 isOri 为 true 时获取原图，isOri 为 false 时获取缩略图；
@@ -48,11 +142,11 @@ switch(cmd){
 1. `AdaptiveLayout()`：自适应屏幕大小；
 2. `onNumChange()`：响应当前显示图片 index 改变的钩子函数；
 
-## 二、Thumbnail 的 Apis
+### Thumbnail 的 Apis
 1. `GetThumbnaiBackgroundColor()/SetThumbnailBackgroundColor()`：获取/设置 thumbnail 的背景色；
 2. `GetThumbnailImageMargin()/SetThumbnailImageMargin(val)`：获取/设置 thumbnail 中图片的外边距，默认为 10px;
 
-## 三、附加功能
+### 附加功能
 1. 在进入编辑模式之前，imageViewer 支持手势滑动切换，也支持鼠标滑动切换；
 
 ## 四、示例
