@@ -15,39 +15,11 @@
 </head>
 
 <body>
-    <div id="main">
-        <div id="topToolGrp">
-            <div class="lt visible_inView">
-                <button onclick="fuc_LoadImage()">LoadImage</button>
-                <button onclick="fuc_showVideo()">show video</button>
-                <button onclick="fuc_ShowImageEditor()">edit</button>
-            </div>
-            <div class="ct visible_inEdit">
-                <button onclick="fuc_rotateLeft()">RotateLeft</button>
-                <button onclick="fuc_rotateRight()">RotateRight</button>
-                <button onclick="fuc_rotate180()">Rotate180</button>
-                <button onclick="fuc_rotateMirror()">Mirror</button>
-                <button onclick="fuc_rotateFlip()">Flip</button>
-                <button onclick="fuc_Crop()">Crop</button>
-                <button onclick="fuc_CloseImageEditor()">cancel</button><button onclick="fuc_Save()">Save</button>
-            </div>
-            <div class="rt visible_inView"><button onclick="fuc_getImage()">Upload</button></div>
-        </div>
-        <div id="imageViewer"></div>
-        <div id="btmToolGrp">
-            <button onclick="fuc_RemoveCurrentImage()">Remove Selected Image</button>
-            <button onclick="fuc_RemoveAllImages()">Remove All Images</button>
-        </div>
-    </div>
+    <div id="imageViewer"></div>
 </body>
 <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
 <script type="text/javascript" src="mbc.js?v=20200227"></script>
 <script type="text/javascript" src="js/opration.js?v=20190522"></script>
-<script>
-    $(".visible_inEdit").hide();
-    $(".visible_inView").show();
-</script>
-
 </html>
 ```
 
@@ -87,7 +59,6 @@ export default {
       if (!this.imageViewer) {
         return false;
       }
-
       this.imageViewer.LoadImageEx();
     },
   },
