@@ -1,5 +1,5 @@
 # imageViewer
-一款基于 Html5、Canvas 的图片编辑器
+一款基于 Html5、Javascript、Canvas 的图片编辑器
 
 ## 一、通过 Node 引用
 
